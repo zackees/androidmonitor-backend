@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "androidmonitor-backend"
+description = "Change this to a description of your project."
+readme = "README.md"
+requires-python = ">=3.7"
+keywords = ["androidmonitor-backend"]
+license = { text = "BSD 3-Clause License" }
+classifiers = ["Programming Language :: Python :: 3"]
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "python-multipart",
+    "multipart",
+    "pathvalidate",
+    "concurrent-log-handler",
+    "file_read_backwards",
+    "colorama"
+]
+# Change this with the version number bump.
+version = "1.0.0"
+
+[tool.mypy]
+ignore_missing_imports = true
