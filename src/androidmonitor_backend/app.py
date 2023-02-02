@@ -61,7 +61,7 @@ async def index() -> RedirectResponse:
 
 
 @app.get("/get_uuids")
-async def log_file() -> JSONResponse:
+def log_file() -> JSONResponse:
     """TODO - Add description."""
     rows = db_get_recent()
     return JSONResponse(rows)
