@@ -9,10 +9,13 @@ import uvicorn  # type: ignore
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse, JSONResponse, PlainTextResponse
 from fastapi import FastAPI, UploadFile, File  # type: ignore
+from colorama import just_fix_windows_console
 
 from androidmonitor_backend.util import async_download
 from androidmonitor_backend.log import make_logger, get_log_reversed
 from androidmonitor_backend.version import VERSION
+
+just_fix_windows_console()
 
 STARTUP_DATETIME = datetime.now()
 
@@ -86,6 +89,9 @@ async def route_upload(
         # shutil.move(temp_path, final_path)
     return PlainTextResponse(f"Uploaded {datafile.filename} to {temp_datapath}")
 
+def main() -> None:
+    """Start the app."""
+    uvicorn.run(app, host="localhost", port=8080)
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="localhost", port=8080)
+    main()

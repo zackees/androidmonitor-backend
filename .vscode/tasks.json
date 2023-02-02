@@ -57,7 +57,7 @@
         {
             "label": "Run Local",
             "type": "shell",
-            "command": ". activate.sh && python run_dev.py",
+            "command": ". ./activate.sh && python run_dev.py",
             "group": "build",
             "options": {
                 "cwd": "${workspaceRoot}"
