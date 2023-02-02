@@ -15,7 +15,12 @@ from colorama import just_fix_windows_console
 from androidmonitor_backend.util import async_download
 from androidmonitor_backend.log import make_logger, get_log_reversed
 from androidmonitor_backend.version import VERSION
-from androidmonitor_backend.db import db_get_recent, db_insert_uuid, db_clear, DuplicateError
+from androidmonitor_backend.db import (
+    db_get_recent,
+    db_insert_uuid,
+    db_clear,
+    DuplicateError,
+)
 from androidmonitor_backend.settings import IS_TEST
 
 just_fix_windows_console()
@@ -64,6 +69,12 @@ app.add_middleware(
 async def index() -> RedirectResponse:
     """By default redirect to the fastapi docs."""
     return RedirectResponse(url="/docs", status_code=302)
+
+
+@app.get("/info")
+async def info() -> PlainTextResponse:
+    """Get info about the app."""
+    return PlainTextResponse(app_description())
 
 
 @app.get("/get_uuids")
