@@ -18,6 +18,7 @@ from androidmonitor_backend.db import (
     db_insert_uuid,
     db_get_recent,
     db_init_once,
+    DuplicateError,
 )
 
 
@@ -40,6 +41,8 @@ class DbTester(unittest.TestCase):
         row = rows[0]
         self.assertEqual(row.uuid, "test")  # type: ignore
         self.assertEqual(row.created, datetime_obj)  # type: ignore
+        with self.assertRaises(DuplicateError):  # Duplicate uuid
+            db_insert_uuid("test", datetime_obj)
 
 
 if __name__ == "__main__":

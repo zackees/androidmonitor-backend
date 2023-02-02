@@ -3,6 +3,7 @@
 """
 
 import os
+import random
 from datetime import datetime
 from tempfile import TemporaryDirectory
 import uvicorn  # type: ignore
@@ -14,7 +15,7 @@ from colorama import just_fix_windows_console
 from androidmonitor_backend.util import async_download
 from androidmonitor_backend.log import make_logger, get_log_reversed
 from androidmonitor_backend.version import VERSION
-from androidmonitor_backend.db import db_get_recent
+from androidmonitor_backend.db import db_get_recent, db_insert_uuid, DuplicateError
 
 just_fix_windows_console()
 
@@ -64,7 +65,40 @@ async def index() -> RedirectResponse:
 def log_file() -> JSONResponse:
     """TODO - Add description."""
     rows = db_get_recent()
-    return JSONResponse(rows)
+    # convert to json
+    out = []
+    for row in rows:
+        json_data = row._asdict()
+        for key in json_data:
+            value = json_data[key]
+            if isinstance(value, datetime):
+                json_data[key] = value.isoformat()
+        out.append(json_data)
+    return JSONResponse(out)
+
+
+# add uuid
+@app.post("/add_uuid")
+def add_uuid() -> JSONResponse:
+    """TODO - Add description."""
+    # generate a random 8 digit hex number
+    # add it to the database
+
+    while True:
+        # generate a random 8 digit number
+        random_value = random.randint(0, 99999999)
+        rand_str = str(random_value).zfill(8)
+        # insert a - in the middle
+        rand_str = rand_str[:4] + "-" + rand_str[4:]
+        now = datetime.now()
+        # add it to the database
+        try:
+            db_insert_uuid(rand_str, datetime.now())
+            # does the value already exist
+            break
+        except DuplicateError:
+            continue
+    return JSONResponse({"ok": True, "uuid": rand_str, "created": str(now)})
 
 
 # get the log file

@@ -6,7 +6,14 @@ from datetime import datetime
 from typing import Any, Sequence
 from sqlalchemy import Table, Column, Integer, String, MetaData, create_engine, DateTime, Row
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.exc import IntegrityError
 from androidmonitor_backend.settings import DB_URL
+
+
+class DuplicateError(Exception):
+    """Duplicate error."""
+
+    pass  # pylint: disable=unnecessary-pass
 
 
 engine = create_engine(DB_URL)
@@ -15,7 +22,7 @@ uuid_table = Table(
     "uuid",
     meta,
     Column("id", Integer, primary_key=True),
-    Column("uuid", String),
+    Column("uuid", String, unique=True),
     Column("created", DateTime),
 )
 Session = sessionmaker(bind=engine)
@@ -30,6 +37,16 @@ def db_init_once() -> None:
     data["init"] = True
 
 
+def db_uuid_exists(uuid: str) -> bool:
+    """Check if a uuid exists."""
+    db_init_once()
+    with engine.connect() as conn:
+        select = uuid_table.select().where(uuid_table.c.uuid == uuid)
+        result = conn.execute(select)
+        rows = result.fetchall()
+        return len(rows) > 0
+
+
 def db_get_recent(limit=10) -> Sequence[Row[Any]]:
     """Get the uuids."""
     db_init_once()
@@ -41,9 +58,14 @@ def db_get_recent(limit=10) -> Sequence[Row[Any]]:
 
 
 def db_insert_uuid(uuid: str, created: datetime) -> None:
-    """Insert a uuid."""
+    """Insert a uuid. Raises an IntegrityError if the uuid already exists."""
     db_init_once()
     with Session() as session:
-        insert = uuid_table.insert().values(uuid=uuid, created=created)
-        session.execute(insert)
-        session.commit()
+        try:
+            insert = uuid_table.insert().values(uuid=uuid, created=created)
+            session.execute(insert)
+            session.commit()
+        except IntegrityError as error:
+            if "UNIQUE constraint failed" in str(error):
+                raise DuplicateError from error
+            raise
