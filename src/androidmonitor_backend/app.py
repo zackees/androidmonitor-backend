@@ -14,6 +14,7 @@ from colorama import just_fix_windows_console
 from androidmonitor_backend.util import async_download
 from androidmonitor_backend.log import make_logger, get_log_reversed
 from androidmonitor_backend.version import VERSION
+from androidmonitor_backend.db import db_get_recent
 
 just_fix_windows_console()
 
@@ -59,10 +60,11 @@ async def index() -> RedirectResponse:
     return RedirectResponse(url="/docs", status_code=302)
 
 
-@app.get("/get")
+@app.get("/get_uuids")
 async def log_file() -> JSONResponse:
     """TODO - Add description."""
-    return JSONResponse({"hello": "world"})
+    rows = db_get_recent()
+    return JSONResponse(rows)
 
 
 # get the log file
@@ -92,6 +94,9 @@ async def route_upload(
 
 def main() -> None:
     """Start the app."""
+    import webbrowser  # pylint: disable=import-outside-toplevel
+
+    webbrowser.open("http://localhost:8080")
     uvicorn.run(app, host="localhost", port=8080)
 
 
