@@ -89,9 +89,11 @@ async def route_upload(
         # shutil.move(temp_path, final_path)
     return PlainTextResponse(f"Uploaded {datafile.filename} to {temp_datapath}")
 
+
 def main() -> None:
     """Start the app."""
     uvicorn.run(app, host="localhost", port=8080)
+
 
 if __name__ == "__main__":
     main()

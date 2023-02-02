@@ -19,7 +19,8 @@ dependencies = [
     "pathvalidate",
     "concurrent-log-handler",
     "file_read_backwards",
-    "colorama"
+    "colorama",
+    "SQLAlchemy==2.0.1"
 ]
 # Change this with the version number bump.
 version = "1.0.0"
