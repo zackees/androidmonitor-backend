@@ -25,7 +25,7 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 log = make_logger(__name__)
 
-APP_DISPLAY_NAME = "FastAPI Template Project"
+APP_DISPLAY_NAME = "AndroidMonitor-Backend"
 
 
 def app_description() -> str:

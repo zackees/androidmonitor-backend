@@ -20,7 +20,9 @@ dependencies = [
     "concurrent-log-handler",
     "file_read_backwards",
     "colorama",
-    "SQLAlchemy==2.0.1"
+    "SQLAlchemy==1.4.46",
+    "psycopg2-binary",
+    "psycopg2"
 ]
 # Change this with the version number bump.
 version = "1.0.0"
