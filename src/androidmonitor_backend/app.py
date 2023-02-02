@@ -81,19 +81,23 @@ def log_file() -> JSONResponse:
 @app.post("/add_uuid")
 def add_uuid() -> JSONResponse:
     """TODO - Add description."""
-    # generate a random 8 digit hex number
-    # add it to the database
-
     while True:
         # generate a random 8 digit number
         random_value = random.randint(0, 99999999)
         rand_str = str(random_value).zfill(8)
+        # sum all digits and add the last digit as the checksum
+        total = 0
+        for char in rand_str:
+            total += int(char)
+        total = total % 10
+        rand_str += str(total)
         # insert a - in the middle
-        rand_str = rand_str[:4] + "-" + rand_str[4:]
+        rand_str = rand_str[:3] + "-" + rand_str[3:6] + "-" + rand_str[6:]
         now = datetime.now()
         # add it to the database
         try:
             db_insert_uuid(rand_str, datetime.now())
+            log.info(f"Added uuid {rand_str}")
             # does the value already exist
             break
         except DuplicateError:
