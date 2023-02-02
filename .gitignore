@@ -13,6 +13,7 @@ app/temp/*
 prod_env/
 prod_env/*
 data/
+db_data/
 build/
 develop-eggs/
 dist/

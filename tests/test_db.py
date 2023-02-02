@@ -7,17 +7,19 @@ Db test.
 
 import os
 import unittest
+import shutil
 from datetime import datetime
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-os.environ["DATA_DIR"] = os.path.join(HERE, "data")
+HERE = os.path.relpath(os.path.dirname(__file__), ".")
+DB_DIR = os.path.join(HERE, "db_data")
+shutil.rmtree(DB_DIR, ignore_errors=True)
+os.makedirs(DB_DIR, exist_ok=True)
+os.environ["DB_URL"] = f"sqlite:///{DB_DIR}/db.sqlite3"
 
 from androidmonitor_backend.db import (
-    uuid_table,
-    engine,
+    db_clear,
     db_insert_uuid,
     db_get_recent,
-    db_init_once,
     DuplicateError,
 )
 
@@ -29,12 +31,7 @@ class DbTester(unittest.TestCase):
         """Example tester."""
         datetime_str = "2020-01-01 00:00:00"
         datetime_obj = datetime.strptime(datetime_str, "%Y-%m-%d %H:%M:%S")
-        db_init_once()
-        conn = engine.connect()
-        # clear the table
-        conn.execute(uuid_table.delete())
-        conn.commit()
-        conn.close()
+        db_clear()
         db_insert_uuid("test", datetime_obj)
         rows = db_get_recent()
         self.assertEqual(len(rows), 1)

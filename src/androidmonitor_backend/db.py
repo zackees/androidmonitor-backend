@@ -4,7 +4,16 @@ Database.
 
 from datetime import datetime
 from typing import Any, Sequence
-from sqlalchemy import Table, Column, Integer, String, MetaData, create_engine, DateTime, Row
+from sqlalchemy import (
+    Table,
+    Column,
+    Integer,
+    String,
+    MetaData,
+    create_engine,
+    DateTime,
+    Row,
+)
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import IntegrityError
 from androidmonitor_backend.settings import DB_URL
@@ -51,10 +60,23 @@ def db_get_recent(limit=10) -> Sequence[Row[Any]]:
     """Get the uuids."""
     db_init_once()
     with engine.connect() as conn:
-        select = uuid_table.select().where().order_by(uuid_table.c.created.desc()).limit(limit)
+        select = (
+            uuid_table.select()
+            .where()
+            .order_by(uuid_table.c.created.desc())
+            .limit(limit)
+        )
         result = conn.execute(select)
         rows = result.fetchall()
         return rows
+
+
+def db_clear() -> None:
+    """Clear the database."""
+    db_init_once()
+    with engine.connect() as conn:
+        conn.execute(uuid_table.delete())
+        conn.commit()
 
 
 def db_insert_uuid(uuid: str, created: datetime) -> None:
