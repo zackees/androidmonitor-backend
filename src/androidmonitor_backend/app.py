@@ -15,11 +15,12 @@ from colorama import just_fix_windows_console
 from androidmonitor_backend.util import async_download
 from androidmonitor_backend.log import make_logger, get_log_reversed
 from androidmonitor_backend.version import VERSION
-from androidmonitor_backend.db import db_get_recent, db_insert_uuid, DuplicateError
+from androidmonitor_backend.db import db_get_recent, db_insert_uuid, db_clear, DuplicateError
+from androidmonitor_backend.settings import IS_TEST
 
 just_fix_windows_console()
 
-STARTUP_DATETIME = datetime.now()
+STARTUP_DATETIME = datetime.utcnow()
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -32,7 +33,11 @@ def app_description() -> str:
     """Get the app description."""
     lines = []
     lines.append("  * Version: " + VERSION)
-    lines.append("  * Started at: " + str(STARTUP_DATETIME))
+    lines.append("  * Started at: " + STARTUP_DATETIME.isoformat() + " UTC")
+    if IS_TEST:
+        lines.append("  * Running in TEST mode")
+    else:
+        lines.append("  * Running in PRODUCTION mode")
     return "\n".join(lines)
 
 
@@ -41,7 +46,7 @@ app = FastAPI(
     version=VERSION,
     redoc_url=None,
     license_info={
-        "name": "Private program, do not distribute",
+        "name": "Handles all the backend stuff for AndroidMonitor",
     },
     description=app_description(),
 )
@@ -93,11 +98,11 @@ def add_uuid() -> JSONResponse:
         rand_str += str(total)
         # insert a - in the middle
         rand_str = rand_str[:3] + "-" + rand_str[3:6] + "-" + rand_str[6:]
-        now = datetime.now()
+        now = datetime.utcnow()
         # add it to the database
         try:
-            db_insert_uuid(rand_str, datetime.now())
-            log.info(f"Added uuid {rand_str}")
+            db_insert_uuid(rand_str, datetime.utcnow())
+            log.info("Added uuid %s", rand_str)
             # does the value already exist
             break
         except DuplicateError:
@@ -107,7 +112,7 @@ def add_uuid() -> JSONResponse:
 
 # get the log file
 @app.get("/log")
-def route_log() -> PlainTextResponse:
+def getlog() -> PlainTextResponse:
     """Gets the log file."""
     out = get_log_reversed(100).strip()
     if not out:
@@ -116,7 +121,7 @@ def route_log() -> PlainTextResponse:
 
 
 @app.post("/upload")
-async def route_upload(
+async def upload(
     datafile: UploadFile = File(...),
 ) -> PlainTextResponse:
     """TODO - Add description."""
@@ -128,6 +133,16 @@ async def route_upload(
         log.info("Downloaded file %s to %s", datafile.filename, temp_datapath)
         # shutil.move(temp_path, final_path)
     return PlainTextResponse(f"Uploaded {datafile.filename} to {temp_datapath}")
+
+
+if IS_TEST:
+    # clear database
+    @app.delete("/clear")
+    async def clear() -> PlainTextResponse:
+        """TODO - Add description."""
+        log.critical("Clear called")
+        db_clear()
+        return PlainTextResponse("Deleted all data")
 
 
 def main() -> None:
