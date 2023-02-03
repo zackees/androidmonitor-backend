@@ -5,23 +5,23 @@
 import os
 import random
 from datetime import datetime
+from hmac import compare_digest
 from tempfile import TemporaryDirectory
 import uvicorn  # type: ignore
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse, JSONResponse, PlainTextResponse
-from fastapi import FastAPI, UploadFile, File  # type: ignore
 from colorama import just_fix_windows_console
-
-from androidmonitor_backend.util import async_download
-from androidmonitor_backend.log import make_logger, get_log_reversed
-from androidmonitor_backend.version import VERSION
+from fastapi import FastAPI, File, Header, UploadFile  # type: ignore
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, PlainTextResponse, RedirectResponse
 from androidmonitor_backend.db import (
+    DuplicateError,
+    db_clear,
     db_get_recent,
     db_insert_uuid,
-    db_clear,
-    DuplicateError,
 )
-from androidmonitor_backend.settings import IS_TEST
+from androidmonitor_backend.log import get_log_reversed, make_logger
+from androidmonitor_backend.settings import API_KEY, IS_TEST
+from androidmonitor_backend.util import async_download
+from androidmonitor_backend.version import VERSION
 
 just_fix_windows_console()
 
@@ -41,6 +41,7 @@ def app_description() -> str:
     lines.append("  * Started at: " + STARTUP_DATETIME.isoformat() + " UTC")
     if IS_TEST:
         lines.append("  * Running in TEST mode")
+        lines.append("  * API_KEY: " + API_KEY)
     else:
         lines.append("  * Running in PRODUCTION mode")
     return "\n".join(lines)
@@ -65,6 +66,18 @@ app.add_middleware(
 )
 
 
+def is_authenticated(api_key: str | None) -> bool:
+    """Checks if the request is authenticated."""
+    if IS_TEST:
+        return True
+    if api_key is None:
+        return False
+    out = compare_digest(api_key, API_KEY)
+    if not out:
+        log.warning("Invalid API key attempted: %s", api_key)
+    return out
+
+
 @app.get("/", include_in_schema=False)
 async def index() -> RedirectResponse:
     """By default redirect to the fastapi docs."""
@@ -78,8 +91,12 @@ async def info() -> PlainTextResponse:
 
 
 @app.get("/get_uuids")
-def log_file() -> JSONResponse:
+def log_file(
+    x_api_key: str = Header(default=None),
+) -> JSONResponse:
     """TODO - Add description."""
+    if not is_authenticated(x_api_key):
+        return JSONResponse({"error": "Invalid API key"}, status_code=401)
     rows = db_get_recent()
     # convert to json
     out = []
@@ -95,8 +112,10 @@ def log_file() -> JSONResponse:
 
 # add uuid
 @app.post("/add_uuid")
-def add_uuid() -> JSONResponse:
+def add_uuid(x_api_key: str = Header(default=None)) -> JSONResponse:
     """TODO - Add description."""
+    if not is_authenticated(x_api_key):
+        return JSONResponse({"error": "Invalid API key"}, status_code=401)
     while True:
         # generate a random 8 digit number
         random_value = random.randint(0, 99999999)
@@ -123,8 +142,10 @@ def add_uuid() -> JSONResponse:
 
 # get the log file
 @app.get("/log")
-def getlog() -> PlainTextResponse:
+def getlog(x_api_key: str = Header(default=None)) -> PlainTextResponse:
     """Gets the log file."""
+    if not is_authenticated(x_api_key):
+        return JSONResponse({"error": "Invalid API key"}, status_code=401)
     out = get_log_reversed(100).strip()
     if not out:
         out = "(Empty log file)"
@@ -133,9 +154,12 @@ def getlog() -> PlainTextResponse:
 
 @app.post("/upload")
 async def upload(
+    x_api_key: str = Header(default=None),
     datafile: UploadFile = File(...),
 ) -> PlainTextResponse:
     """TODO - Add description."""
+    if not is_authenticated(x_api_key):
+        return JSONResponse({"error": "Invalid API key"}, status_code=401)
     log.info("Upload called with file: %s", datafile.filename)
     with TemporaryDirectory() as temp_dir:
         temp_datapath: str = os.path.join(temp_dir, datafile.filename)
@@ -159,10 +183,13 @@ if IS_TEST:
 def main() -> None:
     """Start the app."""
     import webbrowser  # pylint: disable=import-outside-toplevel
+
     port = 8080
 
     webbrowser.open(f"http://localhost:{port}")
-    uvicorn.run("androidmonitor_backend.app:app", host="localhost", port=port, reload=True)
+    uvicorn.run(
+        "androidmonitor_backend.app:app", host="localhost", port=port, reload=True
+    )
 
 
 if __name__ == "__main__":

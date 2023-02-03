@@ -25,6 +25,7 @@ UPLOAD_CHUNK_SIZE = 1024 * 64
 DEFAULT_DB_URL = "postgresql://androidmonitor_db_user:R4i7lYhwKsmAIlXku8x1WrTepm1PaDfe@dpg-cfdkeqcgqg45rntp0go0-a.oregon-postgres.render.com/androidmonitor_db"
 DB_URL = os.getenv("DB_URL", DEFAULT_DB_URL)
 IS_TEST = os.getenv("IS_TEST", "0") == "1"
+API_KEY = os.getenv("API_KEY", "test")
 
 
 os.makedirs(DATA_DIR, exist_ok=True)
