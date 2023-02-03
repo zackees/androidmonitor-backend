@@ -67,6 +67,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+if IS_TEST:
+    ApiKeyHeader = Header(None)
+else:
+    ApiKeyHeader = Header(...)
+
 
 def is_authenticated(api_key: str | None) -> bool:
     """Checks if the request is authenticated."""
@@ -94,7 +99,7 @@ async def info() -> PlainTextResponse:
 
 @app.get("/get_uuids")
 def log_file(
-    x_api_key: str = Header(default=None),
+    x_api_key: str = ApiKeyHeader,
 ) -> JSONResponse:
     """TODO - Add description."""
     if not is_authenticated(x_api_key):
@@ -114,7 +119,7 @@ def log_file(
 
 # add uuid
 @app.post("/add_uuid")
-def add_uuid(x_api_key: str = Header(default=None)) -> JSONResponse:
+def add_uuid(x_api_key: str = ApiKeyHeader) -> JSONResponse:
     """TODO - Add description."""
     if not is_authenticated(x_api_key):
         return JSONResponse({"error": "Invalid API key"}, status_code=401)
@@ -144,7 +149,7 @@ def add_uuid(x_api_key: str = Header(default=None)) -> JSONResponse:
 
 # get the log file
 @app.get("/log")
-def getlog(x_api_key: str = Header(default=None)) -> PlainTextResponse:
+def getlog(x_api_key: str = ApiKeyHeader) -> PlainTextResponse:
     """Gets the log file."""
     if not is_authenticated(x_api_key):
         return JSONResponse({"error": "Invalid API key"}, status_code=401)
@@ -156,7 +161,7 @@ def getlog(x_api_key: str = Header(default=None)) -> PlainTextResponse:
 
 @app.post("/upload")
 async def upload(
-    x_api_key: str = Header(default=None),
+    x_api_key: str = ApiKeyHeader,
     datafile: UploadFile = File(...),
 ) -> PlainTextResponse:
     """TODO - Add description."""
@@ -189,9 +194,7 @@ def main() -> None:
     port = 8080
 
     webbrowser.open(f"http://localhost:{port}")
-    uvicorn.run(
-        "androidmonitor_backend.app:app", host="localhost", port=port, reload=True
-    )
+    uvicorn.run("androidmonitor_backend.app:app", host="localhost", port=port, reload=True)
 
 
 if __name__ == "__main__":
