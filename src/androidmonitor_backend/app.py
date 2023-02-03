@@ -159,9 +159,10 @@ if IS_TEST:
 def main() -> None:
     """Start the app."""
     import webbrowser  # pylint: disable=import-outside-toplevel
+    port = 8080
 
-    webbrowser.open("http://localhost:8080")
-    uvicorn.run(app, host="localhost", port=8080)
+    webbrowser.open(f"http://localhost:{port}")
+    uvicorn.run("androidmonitor_backend.app:app", host="localhost", port=port, reload=True)
 
 
 if __name__ == "__main__":
