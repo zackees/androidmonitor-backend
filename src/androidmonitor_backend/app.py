@@ -152,7 +152,7 @@ def add_uuid(x_api_key: str = ApiKeyHeader) -> JSONResponse:
 def getlog(x_api_key: str = ApiKeyHeader) -> PlainTextResponse:
     """Gets the log file."""
     if not is_authenticated(x_api_key):
-        return JSONResponse({"error": "Invalid API key"}, status_code=401)
+        return PlainTextResponse("Invalid API key", status_code=401)
     out = get_log_reversed(100).strip()
     if not out:
         out = "(Empty log file)"
@@ -166,7 +166,7 @@ async def upload(
 ) -> PlainTextResponse:
     """TODO - Add description."""
     if not is_authenticated(x_api_key):
-        return JSONResponse({"error": "Invalid API key"}, status_code=401)
+        return PlainTextResponse("Invalid API key", status_code=401)
     log.info("Upload called with file: %s", datafile.filename)
     with TemporaryDirectory() as temp_dir:
         temp_datapath: str = os.path.join(temp_dir, datafile.filename)
