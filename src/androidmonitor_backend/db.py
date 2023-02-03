@@ -4,18 +4,20 @@ Database.
 
 from datetime import datetime
 from typing import Any, Sequence
+
 from sqlalchemy import (
-    Table,
     Column,
-    Integer,
-    String,
-    MetaData,
-    create_engine,
     DateTime,
+    Integer,
+    MetaData,
     Row,
+    String,
+    Table,
+    create_engine,
 )
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import sessionmaker
+
 from androidmonitor_backend.settings import DB_URL
 
 

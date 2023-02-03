@@ -6,8 +6,8 @@ Db test.
 # flake8: noqa: E402
 
 import os
-import unittest
 import shutil
+import unittest
 from datetime import datetime
 
 HERE = os.path.relpath(os.path.dirname(__file__), ".")
@@ -17,10 +17,10 @@ os.makedirs(DB_DIR, exist_ok=True)
 os.environ["DB_URL"] = f"sqlite:///{DB_DIR}/db.sqlite3"
 
 from androidmonitor_backend.db import (
-    db_clear,
-    db_insert_uuid,
-    db_get_recent,
     DuplicateError,
+    db_clear,
+    db_get_recent,
+    db_insert_uuid,
 )
 
 

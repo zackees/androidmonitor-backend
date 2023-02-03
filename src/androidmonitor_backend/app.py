@@ -7,11 +7,13 @@ import random
 from datetime import datetime
 from hmac import compare_digest
 from tempfile import TemporaryDirectory
+
 import uvicorn  # type: ignore
 from colorama import just_fix_windows_console
 from fastapi import FastAPI, File, Header, UploadFile  # type: ignore
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, PlainTextResponse, RedirectResponse
+
 from androidmonitor_backend.db import (
     DuplicateError,
     db_clear,
