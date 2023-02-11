@@ -9,3 +9,23 @@
 #### Lint
 
 [![Actions Status](../../workflows/Lint/badge.svg)](../../actions/workflows/lint.yml)
+
+
+## Registration flow
+
+  * backend:
+    * operator adds the UID
+    * one hour window opens up for registration with UID
+
+  * client:
+    * adds the UID
+    * communicates with backend
+    * if successful, a signed token is stored in the secure portion of the android app
+
+  * backend:
+    * UID registration window is closed
+    * UID + signed token is stored in the database
+
+  * client:
+    * begins operation
+    * when uploading, the token is used to grant access to the /v1/upload endpoint
