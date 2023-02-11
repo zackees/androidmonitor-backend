@@ -91,7 +91,7 @@ async def index() -> RedirectResponse:
     return RedirectResponse(url="/docs", status_code=302)
 
 
-@app.get("/info")
+@app.get("/v1/info")
 async def info() -> PlainTextResponse:
     """Get info about the app."""
     return PlainTextResponse(app_description())
@@ -118,7 +118,7 @@ def log_file(
 
 
 # add uuid
-@app.post("/add_uuid")
+@app.post("/v1/add_uuid")
 def add_uuid(x_api_key: str = ApiKeyHeader) -> JSONResponse:
     """TODO - Add description."""
     if not is_authenticated(x_api_key):
@@ -159,7 +159,7 @@ def getlog(x_api_key: str = ApiKeyHeader) -> PlainTextResponse:
     return PlainTextResponse(out)
 
 
-@app.post("/upload")
+@app.post("/v1/upload")
 async def upload(
     x_api_key: str = ApiKeyHeader,
     datafile: UploadFile = File(...),
@@ -194,7 +194,9 @@ def main() -> None:
     port = 8080
 
     webbrowser.open(f"http://localhost:{port}")
-    uvicorn.run("androidmonitor_backend.app:app", host="localhost", port=port, reload=True)
+    uvicorn.run(
+        "androidmonitor_backend.app:app", host="localhost", port=port, reload=True
+    )
 
 
 if __name__ == "__main__":
