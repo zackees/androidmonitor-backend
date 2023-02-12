@@ -19,9 +19,10 @@ from androidmonitor_backend.db import (
     db_clear,
     db_get_recent,
     db_insert_uuid,
+    db_try_register,
 )
 from androidmonitor_backend.log import get_log_reversed, make_logger
-from androidmonitor_backend.settings import API_KEY, IS_TEST, DB_URL
+from androidmonitor_backend.settings import API_KEY, IS_TEST, DB_URL, CLIENT_API_KEYS
 from androidmonitor_backend.util import async_download
 from androidmonitor_backend.version import VERSION
 
@@ -45,6 +46,8 @@ def app_description() -> str:
         lines.append("  * Running in TEST mode")
         lines.append("  * API_KEY: " + API_KEY)
         lines.append("  * DB_URL: " + DB_URL)
+        for i, client_key in enumerate(CLIENT_API_KEYS):
+            lines.append(f"  * CLIENT_API_KEY {i}: {client_key}")
     else:
         lines.append("  * Running in PRODUCTION mode")
     return "\n".join(lines)
@@ -86,6 +89,14 @@ def is_authenticated(api_key: str | None) -> bool:
     return out
 
 
+def is_client_authenticated(client_api_key: str) -> bool:
+    """Checks if the request is authenticated."""
+    for client_key in CLIENT_API_KEYS:
+        if compare_digest(client_api_key, client_key):
+            return True
+    return False
+
+
 @app.get("/", include_in_schema=False)
 async def index() -> RedirectResponse:
     """By default redirect to the fastapi docs."""
@@ -118,7 +129,6 @@ def log_file(
     return JSONResponse(out)
 
 
-# add uuid
 @app.post("/v1/add_uuid")
 def add_uuid(x_api_key: str = ApiKeyHeader) -> JSONResponse:
     """TODO - Add description."""
@@ -146,6 +156,17 @@ def add_uuid(x_api_key: str = ApiKeyHeader) -> JSONResponse:
         except DuplicateError:
             continue
     return JSONResponse({"ok": True, "uuid": rand_str, "created": str(now)})
+
+
+@app.post("/v1/client_register")
+def register(uuid: str, x_client_api_key: str = Header(...)) -> JSONResponse:
+    """Tries to register a device"""
+    if not is_authenticated(x_client_api_key):
+        return JSONResponse({"error": "Invalid API key"}, status_code=401)
+    ok, token = db_try_register(uuid)
+    if ok:
+        return JSONResponse({"ok": True, "error": None, "token": token})
+    return JSONResponse({"ok": False, "error": "Invalid UUID", "token": None})
 
 
 # get the log file

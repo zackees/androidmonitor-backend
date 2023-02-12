@@ -3,7 +3,9 @@ Database.
 """
 
 from datetime import datetime, timedelta
+import secrets
 from typing import Any, Sequence
+
 
 from sqlalchemy import (
     Column,
@@ -17,7 +19,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
-
+from androidmonitor_backend.log import make_logger
 from androidmonitor_backend.settings import DB_URL
 
 
@@ -27,6 +29,8 @@ class DuplicateError(Exception):
     pass  # pylint: disable=unnecessary-pass
 
 
+log = make_logger(__name__)
+
 engine = create_engine(DB_URL)
 meta = MetaData()
 uuid_table = Table(
@@ -34,8 +38,8 @@ uuid_table = Table(
     meta,
     Column("id", Integer, primary_key=True),
     Column("uuid", String, unique=True),
-    Column("created", DateTime),
-    Column("token", String),
+    Column("created", DateTime, index=True),
+    Column("token", String, index=True),
 )
 Session = sessionmaker(bind=engine)
 
@@ -98,6 +102,29 @@ def db_insert_uuid(uuid: str, created: datetime) -> None:
             if "UNIQUE constraint failed" in str(error):
                 raise DuplicateError from error
             raise
+
+
+def db_try_register(uuid: str) -> tuple[bool, str]:
+    """Try to register a device."""
+    db_init_once()
+    token128 = secrets.token_urlsafe(128)
+    with Session() as session:
+        # update uuid with token
+        log.info("Registering device %s", uuid)
+        update = (
+            uuid_table.update()
+            .where(uuid_table.c.uuid == uuid)
+            .values(token=token128)
+            .returning(uuid_table.c.token)
+        )
+        result = session.execute(update)
+        session.commit()
+        rows = result.fetchall()
+        if len(rows) == 0:
+            log.info("Device %s not found", uuid)
+            return False, ""
+        log.info("Device %s registered", uuid)
+        return True, token128
 
 
 def db_expire_old_uuids(max_time_seconds: int) -> None:

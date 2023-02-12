@@ -27,7 +27,7 @@ from androidmonitor_backend.db import (
 class DbTester(unittest.TestCase):
     """Example tester."""
 
-    def test_db(self) -> None:
+    def test_insert_uid(self) -> None:
         """Example tester."""
         datetime_str = "2020-01-01 00:00:00"
         datetime_obj = datetime.strptime(datetime_str, "%Y-%m-%d %H:%M:%S")

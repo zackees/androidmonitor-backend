@@ -32,7 +32,11 @@ DEFAULT_PROD_DB_URL = "postgresql://androidmonitor_db_user:R4i7lYhwKsmAIlXku8x1W
 DEFAULT_TEST_DB_URL = f"sqlite:///{DATA_DIR}/db.sqlite3"
 DB_URL = os.getenv("DB_URL", DEFAULT_TEST_DB_URL if IS_TEST else DEFAULT_PROD_DB_URL)
 API_KEY = os.getenv("API_KEY", "test")
-
+CLIENT_API_KEYS = frozenset(
+    [
+        "1Sv2d4TarkgfUu3yzqXClPTzBVB1hRtQQ1hdcs0yW1HqLY8NLG88HAaUBw3VgRWmN6h1vAfmiReRMcPKKMGgPAyStZCzYEPLLzARMjdYWClcjeaYOV3irge5fnvGQiqx"
+    ]
+)
 
 os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(DATA_UPLOAD_DIR, exist_ok=True)
