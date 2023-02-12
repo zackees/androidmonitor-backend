@@ -21,7 +21,7 @@ from androidmonitor_backend.db import (
     db_insert_uuid,
 )
 from androidmonitor_backend.log import get_log_reversed, make_logger
-from androidmonitor_backend.settings import API_KEY, IS_TEST
+from androidmonitor_backend.settings import API_KEY, IS_TEST, DB_URL
 from androidmonitor_backend.util import async_download
 from androidmonitor_backend.version import VERSION
 
@@ -44,6 +44,7 @@ def app_description() -> str:
     if IS_TEST:
         lines.append("  * Running in TEST mode")
         lines.append("  * API_KEY: " + API_KEY)
+        lines.append("  * DB_URL: " + DB_URL)
     else:
         lines.append("  * Running in PRODUCTION mode")
     return "\n".join(lines)
