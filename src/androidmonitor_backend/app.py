@@ -20,6 +20,7 @@ from androidmonitor_backend.db import (
     db_get_recent,
     db_insert_uuid,
     db_try_register,
+    db_is_client_registered,
 )
 from androidmonitor_backend.log import get_log_reversed, make_logger
 from androidmonitor_backend.settings import (
@@ -173,6 +174,19 @@ def register(uuid: str, x_client_api_key: str = Header(...)) -> JSONResponse:
     if ok:
         return JSONResponse({"ok": True, "error": None, "token": token})
     return JSONResponse({"ok": False, "error": "Invalid UUID", "token": None})
+
+
+@app.get("/v1/is_client_registered")
+def is_client_registered(
+    x_uuid: str = Header(...),
+    x_client_token: str = Header(...),
+    x_client_api_key: str = Header(...),
+) -> JSONResponse:
+    """Checks if a device is registered."""
+    if not is_client_authenticated(x_client_api_key):
+        return JSONResponse({"error": "Invalid API key"}, status_code=401)
+    is_registered = db_is_client_registered(x_uuid, x_client_token)
+    return JSONResponse({"is_registered": is_registered})
 
 
 # get the log file

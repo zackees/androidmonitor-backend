@@ -79,7 +79,12 @@ def db_get_recent(limit=10) -> Sequence[Row[Any]]:
     """Get the uuids."""
     db_init_once()
     with engine.connect() as conn:
-        select = uuid_table.select().where().order_by(uuid_table.c.created.desc()).limit(limit)
+        select = (
+            uuid_table.select()
+            .where()
+            .order_by(uuid_table.c.created.desc())
+            .limit(limit)
+        )
         result = conn.execute(select)
         rows = result.fetchall()
         return rows
@@ -128,11 +133,25 @@ def db_try_register(uuid: str) -> tuple[bool, str]:
         )
         result = session.execute(update)
         session.commit()
-        if result.rowcount == 0:
+        if result.rowcount == 0:  # type: ignore
             log.info("uid %s already registered or it doesn't exist", uuid)
             return False, ""
         log.info("uid %s registered", uuid)
         return True, token128
+
+
+def db_is_client_registered(uuid: str, token: str) -> bool:
+    """Returns true if the client with the token is registered."""
+    db_init_once()
+    with engine.connect() as conn:
+        select = (
+            uuid_table.select()
+            .where(uuid_table.c.uuid == uuid)
+            .where(uuid_table.c.token == token)
+        )
+        result = conn.execute(select)
+        rows = result.fetchall()
+        return len(rows) > 0
 
 
 def db_expire_old_uuids(max_time_seconds: int) -> None:

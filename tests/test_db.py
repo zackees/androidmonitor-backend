@@ -24,6 +24,7 @@ from androidmonitor_backend.db import (
     db_try_register,
     db_expire_old_uuids,
     db_get_uuid,
+    db_is_client_registered,
 )
 
 
@@ -57,6 +58,8 @@ class DbTester(unittest.TestCase):
         self.assertTrue(ok)
         # assert token is 128 chars
         self.assertEqual(len(token), 128)
+        # test that client is registered
+        self.assertTrue(db_is_client_registered("test2", token))
         # assert that the token can't be registered again
         ok, _ = db_try_register("test2")
         self.assertFalse(ok)
