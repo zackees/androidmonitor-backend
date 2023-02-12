@@ -24,7 +24,7 @@ from androidmonitor_backend.db import (
 )
 from androidmonitor_backend.log import get_log_reversed, make_logger
 from androidmonitor_backend.settings import (
-    API_KEY,
+    API_ADMIN_KEY,
     IS_TEST,
     DB_URL,
     CLIENT_API_KEYS,
@@ -62,7 +62,7 @@ def app_description() -> str:
     lines.append("  * Started at: " + STARTUP_DATETIME.isoformat() + " UTC")
     if IS_TEST:
         lines.append("  * Running in TEST mode")
-        lines.append("  * API_KEY: " + API_KEY)
+        lines.append("  * API_KEY: " + API_ADMIN_KEY)
         lines.append("  * DB_URL: " + DB_URL)
         for i, client_key in enumerate(CLIENT_API_KEYS):
             lines.append(f"  * CLIENT_API_KEY {i}: {client_key}")
@@ -102,7 +102,7 @@ def is_authenticated(api_key: str | None) -> bool:
         return True
     if api_key is None:
         return False
-    out = compare_digest(api_key, API_KEY)
+    out = compare_digest(api_key, API_ADMIN_KEY)
     if not out:
         log.warning("Invalid API key attempted: %s", api_key)
     return out
@@ -129,9 +129,9 @@ async def info() -> PlainTextResponse:
 
 
 @app.post("/v1/add_uuid", tags=["admin"])
-def add_uuid(x_api_key: str = ApiKeyHeader) -> JSONResponse:
+def add_uuid(x_api_admin_key: str = ApiKeyHeader) -> JSONResponse:
     """TODO - Add description."""
-    if not is_authenticated(x_api_key):
+    if not is_authenticated(x_api_admin_key):
         return JSONResponse({"error": "Invalid API key"}, status_code=401)
     while True:
         # generate a random 8 digit number
@@ -203,10 +203,10 @@ async def upload(
 
 @app.get("/get_uuids", tags=["admin"])
 def log_file(
-    x_api_key: str = ApiKeyHeader,
+    x_api_admin_key: str = ApiKeyHeader,
 ) -> JSONResponse:
     """TODO - Add description."""
-    if not is_authenticated(x_api_key):
+    if not is_authenticated(x_api_admin_key):
         return JSONResponse({"error": "Invalid API key"}, status_code=401)
     rows = db_get_recent()
     # convert to json
@@ -223,9 +223,9 @@ def log_file(
 
 # get the log file
 @app.get("/log", tags=["admin"])
-def getlog(x_api_key: str = ApiKeyHeader) -> PlainTextResponse:
+def getlog(x_api_admin_key: str = ApiKeyHeader) -> PlainTextResponse:
     """Gets the log file."""
-    if not is_authenticated(x_api_key):
+    if not is_authenticated(x_api_admin_key):
         return PlainTextResponse("Invalid API key", status_code=401)
     out = get_log_reversed(100).strip()
     if not out:
@@ -236,8 +236,12 @@ def getlog(x_api_key: str = ApiKeyHeader) -> PlainTextResponse:
 if ALLOW_DB_CLEAR:
     # clear database
     @app.delete("/clear", tags=["admin"])
-    async def clear(delete=False) -> PlainTextResponse:
+    async def clear(
+        delete=False, x_api_admin_key: str = ApiKeyHeader
+    ) -> PlainTextResponse:
         """TODO - Add description."""
+        if not is_authenticated(x_api_admin_key):
+            return PlainTextResponse("Invalid API key", status_code=401)
         log.critical("Clear called")
         db_clear(delete)
         return PlainTextResponse("Deleted all data")

@@ -33,8 +33,8 @@ ALLOW_DB_CLEAR = os.getenv("ALLOW_DB_CLEAR", "0") == "1" or IS_TEST
 DEFAULT_PROD_DB_URL = "postgresql://androidmonitor_db_user:R4i7lYhwKsmAIlXku8x1WrTepm1PaDfe@dpg-cfdkeqcgqg45rntp0go0-a.oregon-postgres.render.com/androidmonitor_db"
 DEFAULT_TEST_DB_URL = f"sqlite:///{DATA_DIR}/db.sqlite3"
 DB_URL = os.getenv("DB_URL", DEFAULT_TEST_DB_URL if IS_TEST else DEFAULT_PROD_DB_URL)
-API_KEY = os.getenv("API_KEY", "test")
-assert IS_TEST or (API_KEY != "test"), "API_KEY must be set in production"
+API_ADMIN_KEY = os.getenv("API_KEY", "test")
+assert IS_TEST or (API_ADMIN_KEY != "test"), "API_KEY must be set in production"
 CLIENT_API_KEYS = frozenset(
     [
         "1Sv2d4TarkgfUu3yzqXClPTzBVB1hRtQQ1hdcs0yW1HqLY8NLG88HAaUBw3VgRWmN6h1vAfmiReRMcPKKMGgPAyStZCzYEPLLzARMjdYWClcjeaYOV3irge5fnvGQiqx"
