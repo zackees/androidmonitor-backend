@@ -22,7 +22,13 @@ from androidmonitor_backend.db import (
     db_try_register,
 )
 from androidmonitor_backend.log import get_log_reversed, make_logger
-from androidmonitor_backend.settings import API_KEY, IS_TEST, DB_URL, CLIENT_API_KEYS
+from androidmonitor_backend.settings import (
+    API_KEY,
+    IS_TEST,
+    DB_URL,
+    CLIENT_API_KEYS,
+    ALLOW_DB_CLEAR,
+)
 from androidmonitor_backend.util import async_download
 from androidmonitor_backend.version import VERSION
 
@@ -201,7 +207,7 @@ async def upload(
     return PlainTextResponse(f"Uploaded {datafile.filename} to {temp_datapath}")
 
 
-if IS_TEST:
+if ALLOW_DB_CLEAR:
     # clear database
     @app.delete("/clear")
     async def clear(delete=False) -> PlainTextResponse:
