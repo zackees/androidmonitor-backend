@@ -22,6 +22,7 @@ dependencies = [
     "colorama",
     "SQLAlchemy",
     "psycopg2-binary",
+    "supervisor"
 ]
 # Change this with the version number bump.
 version = "1.0.0"
