@@ -79,12 +79,7 @@ def db_get_recent(limit=10) -> Sequence[Row[Any]]:
     """Get the uuids."""
     db_init_once()
     with engine.connect() as conn:
-        select = (
-            uuid_table.select()
-            .where()
-            .order_by(uuid_table.c.created.desc())
-            .limit(limit)
-        )
+        select = uuid_table.select().where().order_by(uuid_table.c.created.desc()).limit(limit)
         result = conn.execute(select)
         rows = result.fetchall()
         return rows
@@ -122,9 +117,21 @@ def db_try_register(uuid: str) -> tuple[bool, str]:
     token128 = secrets.token_hex(64)  # 2 bytes per char
     with Session() as session:
         # update uuid with token
-        log.info("Registering device %s", uuid)
-        session.query(uuid_table).filter_by(uuid=uuid).update({"token": token128})
-        log.info("Device %s registered", uuid)
+        log.info("Attempting to register uid %s with token %s", uuid, token128)
+        # update the uid if of the token only if the previous token was None
+        # flake8: noqa=E711
+        update = (
+            uuid_table.update()
+            .where(uuid_table.c.uuid == uuid)
+            .where(uuid_table.c.token == None)  # type: ignore # pylint: disable=singleton-comparison
+            .values(token=token128)
+        )
+        result = session.execute(update)
+        session.commit()
+        if result.rowcount == 0:
+            log.info("uid %s already registered or it doesn't exist", uuid)
+            return False, ""
+        log.info("uid %s registered", uuid)
         return True, token128
 
 
