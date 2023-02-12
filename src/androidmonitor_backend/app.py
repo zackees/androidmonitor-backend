@@ -43,6 +43,17 @@ log = make_logger(__name__)
 
 APP_DISPLAY_NAME = "AndroidMonitor-Backend"
 
+tags_metadata = [
+    {
+        "name": "client",
+        "description": "Client api",
+    },
+    {
+        "name": "admin",
+        "description": "Admin control of registering clients",
+    },
+]
+
 
 def app_description() -> str:
     """Get the app description."""
@@ -68,6 +79,7 @@ app = FastAPI(
         "name": "Handles all the backend stuff for AndroidMonitor",
     },
     description=app_description(),
+    openapi_tags=tags_metadata,
 )
 
 app.add_middleware(
@@ -110,13 +122,13 @@ async def index() -> RedirectResponse:
     return RedirectResponse(url="/docs", status_code=302)
 
 
-@app.get("/v1/info")
+@app.get("/v1/info", tags=["client"])
 async def info() -> PlainTextResponse:
     """Get info about the app."""
     return PlainTextResponse(app_description())
 
 
-@app.post("/v1/add_uuid")
+@app.post("/v1/add_uuid", tags=["admin"])
 def add_uuid(x_api_key: str = ApiKeyHeader) -> JSONResponse:
     """TODO - Add description."""
     if not is_authenticated(x_api_key):
@@ -145,7 +157,7 @@ def add_uuid(x_api_key: str = ApiKeyHeader) -> JSONResponse:
     return JSONResponse({"ok": True, "uuid": rand_str, "created": str(now)})
 
 
-@app.post("/v1/client_register")
+@app.post("/v1/client_register", tags=["client"])
 def register(uuid: str, x_client_api_key: str = Header(...)) -> JSONResponse:
     """Tries to register a device"""
     if not is_authenticated(x_client_api_key):
@@ -156,7 +168,7 @@ def register(uuid: str, x_client_api_key: str = Header(...)) -> JSONResponse:
     return JSONResponse({"ok": False, "error": "Invalid UUID", "token": None})
 
 
-@app.get("/v1/is_client_registered")
+@app.get("/v1/is_client_registered", tags=["client"])
 def is_client_registered(
     x_uuid: str = Header(...),
     x_client_token: str = Header(...),
@@ -169,7 +181,7 @@ def is_client_registered(
     return JSONResponse({"is_registered": is_registered})
 
 
-@app.post("/v1/upload")
+@app.post("/v1/upload", tags=["client"])
 async def upload(
     x_api_key: str = ApiKeyHeader,
     datafile: UploadFile = File(...),
@@ -189,7 +201,7 @@ async def upload(
     return PlainTextResponse(f"Uploaded {datafile.filename} to {temp_datapath}")
 
 
-@app.get("/get_uuids")
+@app.get("/get_uuids", tags=["admin"])
 def log_file(
     x_api_key: str = ApiKeyHeader,
 ) -> JSONResponse:
@@ -210,7 +222,7 @@ def log_file(
 
 
 # get the log file
-@app.get("/log")
+@app.get("/log", tags=["admin"])
 def getlog(x_api_key: str = ApiKeyHeader) -> PlainTextResponse:
     """Gets the log file."""
     if not is_authenticated(x_api_key):
@@ -223,7 +235,7 @@ def getlog(x_api_key: str = ApiKeyHeader) -> PlainTextResponse:
 
 if ALLOW_DB_CLEAR:
     # clear database
-    @app.delete("/clear")
+    @app.delete("/clear", tags=["admin"])
     async def clear(delete=False) -> PlainTextResponse:
         """TODO - Add description."""
         log.critical("Clear called")
