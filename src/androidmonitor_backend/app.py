@@ -116,26 +116,6 @@ async def info() -> PlainTextResponse:
     return PlainTextResponse(app_description())
 
 
-@app.get("/get_uuids")
-def log_file(
-    x_api_key: str = ApiKeyHeader,
-) -> JSONResponse:
-    """TODO - Add description."""
-    if not is_authenticated(x_api_key):
-        return JSONResponse({"error": "Invalid API key"}, status_code=401)
-    rows = db_get_recent()
-    # convert to json
-    out = []
-    for row in rows:
-        json_data = row._asdict()
-        for key in json_data:
-            value = json_data[key]
-            if isinstance(value, datetime):
-                json_data[key] = value.isoformat()
-        out.append(json_data)
-    return JSONResponse(out)
-
-
 @app.post("/v1/add_uuid")
 def add_uuid(x_api_key: str = ApiKeyHeader) -> JSONResponse:
     """TODO - Add description."""
@@ -189,18 +169,6 @@ def is_client_registered(
     return JSONResponse({"is_registered": is_registered})
 
 
-# get the log file
-@app.get("/log")
-def getlog(x_api_key: str = ApiKeyHeader) -> PlainTextResponse:
-    """Gets the log file."""
-    if not is_authenticated(x_api_key):
-        return PlainTextResponse("Invalid API key", status_code=401)
-    out = get_log_reversed(100).strip()
-    if not out:
-        out = "(Empty log file)"
-    return PlainTextResponse(out)
-
-
 @app.post("/v1/upload")
 async def upload(
     x_api_key: str = ApiKeyHeader,
@@ -219,6 +187,38 @@ async def upload(
         log.info("Downloaded file %s to %s", datafile.filename, temp_datapath)
         # shutil.move(temp_path, final_path)
     return PlainTextResponse(f"Uploaded {datafile.filename} to {temp_datapath}")
+
+
+@app.get("/get_uuids")
+def log_file(
+    x_api_key: str = ApiKeyHeader,
+) -> JSONResponse:
+    """TODO - Add description."""
+    if not is_authenticated(x_api_key):
+        return JSONResponse({"error": "Invalid API key"}, status_code=401)
+    rows = db_get_recent()
+    # convert to json
+    out = []
+    for row in rows:
+        json_data = row._asdict()
+        for key in json_data:
+            value = json_data[key]
+            if isinstance(value, datetime):
+                json_data[key] = value.isoformat()
+        out.append(json_data)
+    return JSONResponse(out)
+
+
+# get the log file
+@app.get("/log")
+def getlog(x_api_key: str = ApiKeyHeader) -> PlainTextResponse:
+    """Gets the log file."""
+    if not is_authenticated(x_api_key):
+        return PlainTextResponse("Invalid API key", status_code=401)
+    out = get_log_reversed(100).strip()
+    if not out:
+        out = "(Empty log file)"
+    return PlainTextResponse(out)
 
 
 if ALLOW_DB_CLEAR:
