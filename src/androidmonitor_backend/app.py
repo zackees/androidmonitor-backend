@@ -167,6 +167,8 @@ async def upload(
     """TODO - Add description."""
     if not is_authenticated(x_api_key):
         return PlainTextResponse("Invalid API key", status_code=401)
+    if datafile.filename is None:
+        return PlainTextResponse("invalid filename", status_code=400)
     log.info("Upload called with file: %s", datafile.filename)
     with TemporaryDirectory() as temp_dir:
         temp_datapath: str = os.path.join(temp_dir, datafile.filename)
