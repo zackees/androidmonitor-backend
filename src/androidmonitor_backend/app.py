@@ -64,8 +64,10 @@ def app_description() -> str:
         lines.append("  * Running in TEST mode")
         lines.append("  * API_KEY: " + API_ADMIN_KEY)
         lines.append("  * DB_URL: " + DB_URL)
+        lines.append("  * ALLOW_DB_CLEAR: " + str(ALLOW_DB_CLEAR))
+        lines.append("  * CLIENT_API_KEYS:")
         for i, client_key in enumerate(CLIENT_API_KEYS):
-            lines.append(f"  * CLIENT_API_KEY {i}: {client_key}")
+            lines.append(f"    * {i}: {client_key}")
     else:
         lines.append("  * Running in PRODUCTION mode")
     return "\n".join(lines)
@@ -240,9 +242,7 @@ def getlog(x_api_admin_key: str = ApiKeyHeader) -> PlainTextResponse:
 if ALLOW_DB_CLEAR:
     # clear database
     @app.delete("/clear", tags=["admin"])
-    async def clear(
-        delete=False, x_api_admin_key: str = ApiKeyHeader
-    ) -> PlainTextResponse:
+    async def clear(delete=False, x_api_admin_key: str = ApiKeyHeader) -> PlainTextResponse:
         """TODO - Add description."""
         if not is_authenticated(x_api_admin_key):
             return PlainTextResponse("Invalid API key", status_code=401)
@@ -264,9 +264,7 @@ def main() -> None:
     ):
         port = 8080
         webbrowser.open(f"http://localhost:{port}")
-        uvicorn.run(
-            "androidmonitor_backend.app:app", host="localhost", port=port, reload=True
-        )
+        uvicorn.run("androidmonitor_backend.app:app", host="localhost", port=port, reload=True)
 
 
 if __name__ == "__main__":
