@@ -182,10 +182,10 @@ async def upload(
 if IS_TEST:
     # clear database
     @app.delete("/clear")
-    async def clear() -> PlainTextResponse:
+    async def clear(delete=False) -> PlainTextResponse:
         """TODO - Add description."""
         log.critical("Clear called")
-        db_clear()
+        db_clear(delete)
         return PlainTextResponse("Deleted all data")
 
 

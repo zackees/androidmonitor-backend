@@ -35,6 +35,7 @@ uuid_table = Table(
     Column("id", Integer, primary_key=True),
     Column("uuid", String, unique=True),
     Column("created", DateTime),
+    Column("token", String),
 )
 Session = sessionmaker(bind=engine)
 
@@ -73,12 +74,16 @@ def db_get_recent(limit=10) -> Sequence[Row[Any]]:
         return rows
 
 
-def db_clear() -> None:
+def db_clear(delete=False) -> None:
     """Clear the database."""
     db_init_once()
     with engine.connect() as conn:
-        conn.execute(uuid_table.delete())
-        conn.commit()
+        if delete:
+            uuid_table.drop(engine)
+            meta.create_all(engine)
+        else:
+            conn.execute(uuid_table.delete())
+            conn.commit()
 
 
 def db_insert_uuid(uuid: str, created: datetime) -> None:
