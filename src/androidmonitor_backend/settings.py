@@ -26,9 +26,11 @@ DEFAULT_EXPIRE_UID_TIME = 60 * 60  # 1 hour
 EXPIRE_UID_TIME = int(os.environ.get("EXPIRE_UID_TIME", DEFAULT_EXPIRE_UID_TIME))
 TASK_SLEEP_TIME = int(os.environ.get("TASK_SLEEP_TIME", DEFAULT_TASK_SLEEP_TIME))
 # DB_URL = f"sqlite:///{os.path.relpath(DATA_DIR, '.')}/db.sqlite3"
-DEFAULT_DB_URL = "postgresql://androidmonitor_db_user:R4i7lYhwKsmAIlXku8x1WrTepm1PaDfe@dpg-cfdkeqcgqg45rntp0go0-a.oregon-postgres.render.com/androidmonitor_db"
-DB_URL = os.getenv("DB_URL", DEFAULT_DB_URL)
-IS_TEST = os.getenv("IS_TEST", "0") == "1"
+IS_PRODUCTION = os.getenv("IS_PRODUCTION", "0") == "1"
+IS_TEST = not IS_PRODUCTION
+DEFAULT_PROD_DB_URL = "postgresql://androidmonitor_db_user:R4i7lYhwKsmAIlXku8x1WrTepm1PaDfe@dpg-cfdkeqcgqg45rntp0go0-a.oregon-postgres.render.com/androidmonitor_db"
+DEFAULT_TEST_DB_URL = f"sqlite:///{DATA_DIR}/db.sqlite3"
+DB_URL = os.getenv("DB_URL", DEFAULT_TEST_DB_URL if IS_TEST else DEFAULT_PROD_DB_URL)
 API_KEY = os.getenv("API_KEY", "test")
 
 
