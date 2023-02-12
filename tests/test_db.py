@@ -20,10 +20,10 @@ from androidmonitor_backend.db import (
     DuplicateError,
     db_clear,
     db_get_recent,
-    db_insert_uuid,
+    db_insert_uid,
     db_try_register,
-    db_expire_old_uuids,
-    db_get_uuid,
+    db_expire_old_uids,
+    db_get_uid,
     db_is_client_registered,
 )
 
@@ -42,18 +42,18 @@ class DbTester(unittest.TestCase):
         datetime_str = "2020-01-01 00:00:00"
         datetime_obj = datetime.strptime(datetime_str, "%Y-%m-%d %H:%M:%S")
         db_clear()
-        db_insert_uuid("test", datetime_obj)
+        db_insert_uid("test", datetime_obj)
         rows = db_get_recent()
         self.assertEqual(len(rows), 1)
         row = rows[0]
-        self.assertEqual(row.uuid, "test")  # type: ignore
+        self.assertEqual(row.uid, "test")  # type: ignore
         self.assertEqual(row.created, datetime_obj)  # type: ignore
-        with self.assertRaises(DuplicateError):  # Duplicate uuid
-            db_insert_uuid("test", datetime_obj)
+        with self.assertRaises(DuplicateError):  # Duplicate uid
+            db_insert_uid("test", datetime_obj)
 
     def test_register(self) -> None:
         """Tests that a uid can be registered"""
-        db_insert_uuid("test2", datetime.utcnow())
+        db_insert_uid("test2", datetime.utcnow())
         ok, token = db_try_register("test2")
         self.assertTrue(ok)
         # assert token is 128 chars
@@ -66,9 +66,9 @@ class DbTester(unittest.TestCase):
 
     def test_expire(self) -> None:
         """Tests that a uid can be expired"""
-        db_insert_uuid("test3", datetime.utcnow())
-        db_expire_old_uuids(max_time_seconds=-99999)
-        val = db_get_uuid("test3")
+        db_insert_uid("test3", datetime.utcnow())
+        db_expire_old_uids(max_time_seconds=-99999)
+        val = db_get_uid("test3")
         self.assertIsNone(val)
 
 

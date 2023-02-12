@@ -18,7 +18,7 @@ from androidmonitor_backend.db import (
     DuplicateError,
     db_clear,
     db_get_recent,
-    db_insert_uuid,
+    db_insert_uid,
     db_try_register,
     db_is_client_registered,
 )
@@ -128,8 +128,8 @@ async def info() -> PlainTextResponse:
     return PlainTextResponse(app_description())
 
 
-@app.post("/v1/add_uuid", tags=["admin"])
-def add_uuid(x_api_admin_key: str = ApiKeyHeader) -> JSONResponse:
+@app.post("/v1/add_uid", tags=["admin"])
+def add_uid(x_api_admin_key: str = ApiKeyHeader) -> JSONResponse:
     """TODO - Add description."""
     if not is_authenticated(x_api_admin_key):
         return JSONResponse({"error": "Invalid API key"}, status_code=401)
@@ -148,47 +148,47 @@ def add_uuid(x_api_admin_key: str = ApiKeyHeader) -> JSONResponse:
         now = datetime.utcnow()
         # add it to the database
         try:
-            db_insert_uuid(rand_str, datetime.utcnow())
-            log.info("Added uuid %s", rand_str)
+            db_insert_uid(rand_str, datetime.utcnow())
+            log.info("Added uid %s", rand_str)
             # does the value already exist
             break
         except DuplicateError:
             continue
-    return JSONResponse({"ok": True, "uuid": rand_str, "created": str(now)})
+    return JSONResponse({"ok": True, "uid": rand_str, "created": str(now)})
 
 
 @app.post("/v1/client_register", tags=["client"])
-def register(uuid: str, x_client_api_key: str = Header(...)) -> JSONResponse:
+def register(uid: str, x_client_api_key: str = Header(...)) -> JSONResponse:
     """Tries to register a device"""
     if not is_authenticated(x_client_api_key):
         return JSONResponse({"error": "Invalid API key"}, status_code=401)
-    ok, token = db_try_register(uuid)
+    ok, token = db_try_register(uid)
     if ok:
         return JSONResponse({"ok": True, "error": None, "token": token})
-    return JSONResponse({"ok": False, "error": "Invalid UUID", "token": None})
+    return JSONResponse({"ok": False, "error": "Invalid uid", "token": None})
 
 
 @app.get("/v1/is_client_registered", tags=["client"])
 def is_client_registered(
-    x_uuid: str = Header(...),
+    x_uid: str = Header(...),
     x_client_token: str = Header(...),
     x_client_api_key: str = Header(...),
 ) -> JSONResponse:
     """Checks if a device is registered."""
     if not is_client_authenticated(x_client_api_key):
         return JSONResponse({"error": "Invalid API key"}, status_code=401)
-    is_registered = db_is_client_registered(x_uuid, x_client_token)
+    is_registered = db_is_client_registered(x_uid, x_client_token)
     return JSONResponse({"is_registered": is_registered})
 
 
 @app.post("/v1/upload", tags=["client"])
 async def upload(
-    x_uuid: str = Header(...),
+    x_uid: str = Header(...),
     x_client_token: str = Header(...),
     datafile: UploadFile = File(...),
 ) -> PlainTextResponse:
     """TODO - Add description."""
-    if not db_is_client_registered(x_uuid, x_client_token):
+    if not db_is_client_registered(x_uid, x_client_token):
         return PlainTextResponse("Invalid client registration", status_code=401)
     if datafile.filename is None:
         return PlainTextResponse("invalid filename", status_code=400)
@@ -202,7 +202,7 @@ async def upload(
     return PlainTextResponse(f"Uploaded {datafile.filename} to {temp_datapath}")
 
 
-@app.get("/get_uuids", tags=["admin"])
+@app.get("/get_uids", tags=["admin"])
 def log_file(
     x_api_admin_key: str = ApiKeyHeader,
 ) -> JSONResponse:

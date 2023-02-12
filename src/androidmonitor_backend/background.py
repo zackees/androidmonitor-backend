@@ -6,7 +6,7 @@ import sys
 import time
 
 from androidmonitor_backend.log import make_logger
-from androidmonitor_backend.db import db_expire_old_uuids
+from androidmonitor_backend.db import db_expire_old_uids
 from androidmonitor_backend.settings import TASK_SLEEP_TIME, EXPIRE_UID_TIME
 
 log = make_logger(__name__, "background.log")
@@ -15,7 +15,7 @@ log = make_logger(__name__, "background.log")
 def run_task() -> None:
     """TODO - Add description."""
     log.info("Running background task")
-    db_expire_old_uuids(EXPIRE_UID_TIME)
+    db_expire_old_uids(EXPIRE_UID_TIME)
 
 
 def main() -> int:

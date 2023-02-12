@@ -33,11 +33,11 @@ log = make_logger(__name__)
 
 engine = create_engine(DB_URL)
 meta = MetaData()
-uuid_table = Table(
-    "uuid",
+uid_table = Table(
+    "uid",
     meta,
     Column("id", Integer, primary_key=True),
-    Column("uuid", String, unique=True),
+    Column("uid", String, unique=True),
     Column("created", DateTime, index=True),
     Column("token", String, index=True),
 )
@@ -53,21 +53,21 @@ def db_init_once() -> None:
     data["init"] = True
 
 
-def db_uuid_exists(uuid: str) -> bool:
-    """Check if a uuid exists."""
+def db_uid_exists(uid: str) -> bool:
+    """Check if a uid exists."""
     db_init_once()
     with engine.connect() as conn:
-        select = uuid_table.select().where(uuid_table.c.uuid == uuid)
+        select = uid_table.select().where(uid_table.c.uid == uid)
         result = conn.execute(select)
         rows = result.fetchall()
         return len(rows) > 0
 
 
-def db_get_uuid(uuid: str) -> Row[Any] | None:
-    """Get a uuid."""
+def db_get_uid(uid: str) -> Row[Any] | None:
+    """Get a uid."""
     db_init_once()
     with engine.connect() as conn:
-        select = uuid_table.select().where(uuid_table.c.uuid == uuid)
+        select = uid_table.select().where(uid_table.c.uid == uid)
         result = conn.execute(select)
         rows = result.fetchall()
         if len(rows) == 0:
@@ -76,14 +76,11 @@ def db_get_uuid(uuid: str) -> Row[Any] | None:
 
 
 def db_get_recent(limit=10) -> Sequence[Row[Any]]:
-    """Get the uuids."""
+    """Get the uids."""
     db_init_once()
     with engine.connect() as conn:
         select = (
-            uuid_table.select()
-            .where()
-            .order_by(uuid_table.c.created.desc())
-            .limit(limit)
+            uid_table.select().where().order_by(uid_table.c.created.desc()).limit(limit)
         )
         result = conn.execute(select)
         rows = result.fetchall()
@@ -95,19 +92,19 @@ def db_clear(delete=False) -> None:
     db_init_once()
     with engine.connect() as conn:
         if delete:
-            uuid_table.drop(engine)
+            uid_table.drop(engine)
             meta.create_all(engine)
         else:
-            conn.execute(uuid_table.delete())
+            conn.execute(uid_table.delete())
             conn.commit()
 
 
-def db_insert_uuid(uuid: str, created: datetime) -> None:
-    """Insert a uuid. Raises an IntegrityError if the uuid already exists."""
+def db_insert_uid(uid: str, created: datetime) -> None:
+    """Insert a uid. Raises an IntegrityError if the uid already exists."""
     db_init_once()
     with Session() as session:
         try:
-            insert = uuid_table.insert().values(uuid=uuid, created=created)
+            insert = uid_table.insert().values(uid=uid, created=created)
             session.execute(insert)
             session.commit()
         except IntegrityError as error:
@@ -116,55 +113,55 @@ def db_insert_uuid(uuid: str, created: datetime) -> None:
             raise
 
 
-def db_try_register(uuid: str) -> tuple[bool, str]:
+def db_try_register(uid: str) -> tuple[bool, str]:
     """Try to register a device."""
     db_init_once()
     token128 = secrets.token_hex(64)  # 2 bytes per char
     with Session() as session:
-        # update uuid with token
-        log.info("Attempting to register uid %s with token %s", uuid, token128)
+        # update uid with token
+        log.info("Attempting to register uid %s with token %s", uid, token128)
         # update the uid if of the token only if the previous token was None
         # flake8: noqa=E711
         update = (
-            uuid_table.update()
-            .where(uuid_table.c.uuid == uuid)
-            .where(uuid_table.c.token == None)  # type: ignore # pylint: disable=singleton-comparison
+            uid_table.update()
+            .where(uid_table.c.uid == uid)
+            .where(uid_table.c.token == None)  # type: ignore # pylint: disable=singleton-comparison
             .values(token=token128)
         )
         result = session.execute(update)
         session.commit()
         if result.rowcount == 0:  # type: ignore
-            log.info("uid %s already registered or it doesn't exist", uuid)
+            log.info("uid %s already registered or it doesn't exist", uid)
             return False, ""
-        log.info("uid %s registered", uuid)
+        log.info("uid %s registered", uid)
         return True, token128
 
 
-def db_is_client_registered(uuid: str, token: str) -> bool:
+def db_is_client_registered(uid: str, token: str) -> bool:
     """Returns true if the client with the token is registered."""
     db_init_once()
     with engine.connect() as conn:
         select = (
-            uuid_table.select()
-            .where(uuid_table.c.uuid == uuid)
-            .where(uuid_table.c.token == token)
+            uid_table.select()
+            .where(uid_table.c.uid == uid)
+            .where(uid_table.c.token == token)
         )
         result = conn.execute(select)
         rows = result.fetchall()
         return len(rows) > 0
 
 
-def db_expire_old_uuids(max_time_seconds: int) -> None:
-    """Expire old uuids."""
+def db_expire_old_uids(max_time_seconds: int) -> None:
+    """Expire old uids."""
     db_init_once()
     with Session() as session:
         max_age: datetime = datetime.utcnow() - timedelta(seconds=max_time_seconds)
-        # delete old uuids where token is null
+        # delete old uids where token is null
         # flake8: noqa=E711
         delete = (
-            uuid_table.delete()
-            .where(uuid_table.c.created < max_age)
-            .where(uuid_table.c.token == None)  # type: ignore # pylint: disable=singleton-comparison
+            uid_table.delete()
+            .where(uid_table.c.created < max_age)
+            .where(uid_table.c.token == None)  # type: ignore # pylint: disable=singleton-comparison
         )
         session.execute(delete)
         session.commit()
