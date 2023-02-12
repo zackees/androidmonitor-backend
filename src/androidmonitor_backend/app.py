@@ -165,14 +165,9 @@ def add_uid(x_api_admin_key: str = ApiKeyHeader) -> JSONResponse:
 @app.get("/test_headers", tags=["client"])
 def test_headers(
     x_data: str = Header(...),
-) -> JSONResponse:
+) -> PlainTextResponse:
     """Test the headers."""
-    return JSONResponse(
-        {
-            "ok": True,
-            "data": x_data,
-        }
-    )
+    return PlainTextResponse(f"data: {x_data}")
 
 
 @app.post("/v1/client_register", tags=["client"])
