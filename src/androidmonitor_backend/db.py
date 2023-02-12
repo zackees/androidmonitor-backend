@@ -63,6 +63,18 @@ def db_uuid_exists(uuid: str) -> bool:
         return len(rows) > 0
 
 
+def db_get_uuid(uuid: str) -> Row[Any] | None:
+    """Get a uuid."""
+    db_init_once()
+    with engine.connect() as conn:
+        select = uuid_table.select().where(uuid_table.c.uuid == uuid)
+        result = conn.execute(select)
+        rows = result.fetchall()
+        if len(rows) == 0:
+            return None
+        return rows[0]
+
+
 def db_get_recent(limit=10) -> Sequence[Row[Any]]:
     """Get the uuids."""
     db_init_once()
@@ -107,22 +119,11 @@ def db_insert_uuid(uuid: str, created: datetime) -> None:
 def db_try_register(uuid: str) -> tuple[bool, str]:
     """Try to register a device."""
     db_init_once()
-    token128 = secrets.token_urlsafe(128)
+    token128 = secrets.token_hex(64)  # 2 bytes per char
     with Session() as session:
         # update uuid with token
         log.info("Registering device %s", uuid)
-        update = (
-            uuid_table.update()
-            .where(uuid_table.c.uuid == uuid)
-            .values(token=token128)
-            .returning(uuid_table.c.token)
-        )
-        result = session.execute(update)
-        session.commit()
-        rows = result.fetchall()
-        if len(rows) == 0:
-            log.info("Device %s not found", uuid)
-            return False, ""
+        session.query(uuid_table).filter_by(uuid=uuid).update({"token": token128})
         log.info("Device %s registered", uuid)
         return True, token128
 
@@ -132,6 +133,12 @@ def db_expire_old_uuids(max_time_seconds: int) -> None:
     db_init_once()
     with Session() as session:
         max_age: datetime = datetime.utcnow() - timedelta(seconds=max_time_seconds)
-        delete = uuid_table.delete().where(uuid_table.c.created < max_age)
+        # delete old uuids where token is null
+        # flake8: noqa=E711
+        delete = (
+            uuid_table.delete()
+            .where(uuid_table.c.created < max_age)
+            .where(uuid_table.c.token == None)  # type: ignore # pylint: disable=singleton-comparison
+        )
         session.execute(delete)
         session.commit()

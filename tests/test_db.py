@@ -21,11 +21,20 @@ from androidmonitor_backend.db import (
     db_clear,
     db_get_recent,
     db_insert_uuid,
+    db_try_register,
+    db_expire_old_uuids,
+    db_get_uuid,
 )
 
 
 class DbTester(unittest.TestCase):
     """Example tester."""
+
+    # setup once for class
+    @classmethod
+    def setUpClass(cls) -> None:
+        """Clears the database."""
+        db_clear(True)
 
     def test_insert_uid(self) -> None:
         """Example tester."""
@@ -40,6 +49,21 @@ class DbTester(unittest.TestCase):
         self.assertEqual(row.created, datetime_obj)  # type: ignore
         with self.assertRaises(DuplicateError):  # Duplicate uuid
             db_insert_uuid("test", datetime_obj)
+
+    def test_register(self) -> None:
+        """Tests that a uid can be registered"""
+        db_insert_uuid("test2", datetime.utcnow())
+        ok, token = db_try_register("test2")
+        self.assertTrue(ok)
+        # assert token is 128 chars
+        self.assertEqual(len(token), 128)
+
+    def test_expire(self) -> None:
+        """Tests that a uid can be expired"""
+        db_insert_uuid("test3", datetime.utcnow())
+        db_expire_old_uuids(max_time_seconds=-99999)
+        val = db_get_uuid("test3")
+        self.assertIsNone(val)
 
 
 if __name__ == "__main__":
