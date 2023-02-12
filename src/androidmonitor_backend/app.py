@@ -125,7 +125,10 @@ async def index() -> RedirectResponse:
 @app.get("/v1/info", tags=["client"])
 async def info() -> PlainTextResponse:
     """Get info about the app."""
-    return PlainTextResponse(app_description())
+    lines = []
+    lines.append("Version: " + VERSION)
+    lines.append("Started at: " + STARTUP_DATETIME.isoformat() + " UTC")
+    return PlainTextResponse("\n".join(lines))
 
 
 @app.post("/v1/add_uid", tags=["admin"])
