@@ -171,11 +171,11 @@ def test_headers(
 
 
 @app.post("/v1/client_register", tags=["client"])
-def register(uid: str, x_client_api_key: str = Header(...)) -> JSONResponse:
+def register(x_uid: str = Header(...), x_client_api_key: str = Header(...)) -> JSONResponse:
     """Tries to register a device"""
     if not is_authenticated(x_client_api_key):
         return JSONResponse({"error": "Invalid API key"}, status_code=401)
-    ok, token = db_try_register(uid)
+    ok, token = db_try_register(x_uid)
     if ok:
         return JSONResponse({"ok": True, "error": None, "token": token})
     return JSONResponse({"ok": False, "error": "Invalid uid", "token": None})
