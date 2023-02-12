@@ -2,7 +2,7 @@
 Database.
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, Sequence
 
 from sqlalchemy import (
@@ -93,3 +93,13 @@ def db_insert_uuid(uuid: str, created: datetime) -> None:
             if "UNIQUE constraint failed" in str(error):
                 raise DuplicateError from error
             raise
+
+
+def db_expire_old_uuids(max_time_seconds: int) -> None:
+    """Expire old uuids."""
+    db_init_once()
+    with Session() as session:
+        max_age: datetime = datetime.utcnow() - timedelta(seconds=max_time_seconds)
+        delete = uuid_table.delete().where(uuid_table.c.created < max_age)
+        session.execute(delete)
+        session.commit()
