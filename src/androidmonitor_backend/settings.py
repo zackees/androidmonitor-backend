@@ -21,6 +21,10 @@ LOGGING_FMT = (
 )
 LOGGING_USE_GZIP = True
 UPLOAD_CHUNK_SIZE = 1024 * 64
+DEFAULT_TASK_SLEEP_TIME = 60 * 5
+DEFAULT_EXPIRE_UID_TIME = 60 * 60  # 1 hour
+EXPIRE_UID_TIME = int(os.environ.get("EXPIRE_UID_TIME", DEFAULT_EXPIRE_UID_TIME))
+TASK_SLEEP_TIME = int(os.environ.get("TASK_SLEEP_TIME", DEFAULT_TASK_SLEEP_TIME))
 # DB_URL = f"sqlite:///{os.path.relpath(DATA_DIR, '.')}/db.sqlite3"
 DEFAULT_DB_URL = "postgresql://androidmonitor_db_user:R4i7lYhwKsmAIlXku8x1WrTepm1PaDfe@dpg-cfdkeqcgqg45rntp0go0-a.oregon-postgres.render.com/androidmonitor_db"
 DB_URL = os.getenv("DB_URL", DEFAULT_DB_URL)
