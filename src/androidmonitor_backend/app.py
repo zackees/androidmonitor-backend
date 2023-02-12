@@ -183,12 +183,13 @@ def is_client_registered(
 
 @app.post("/v1/upload", tags=["client"])
 async def upload(
-    x_api_key: str = ApiKeyHeader,
+    x_uuid: str = Header(...),
+    x_client_token: str = Header(...),
     datafile: UploadFile = File(...),
 ) -> PlainTextResponse:
     """TODO - Add description."""
-    if not is_authenticated(x_api_key):
-        return PlainTextResponse("Invalid API key", status_code=401)
+    if not db_is_client_registered(x_uuid, x_client_token):
+        return PlainTextResponse("Invalid client registration", status_code=401)
     if datafile.filename is None:
         return PlainTextResponse("invalid filename", status_code=400)
     log.info("Upload called with file: %s", datafile.filename)
