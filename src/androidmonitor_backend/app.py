@@ -162,6 +162,19 @@ def add_uid(x_api_admin_key: str = ApiKeyHeader) -> JSONResponse:
     return JSONResponse({"ok": True, "uid": rand_str, "created": str(now)})
 
 
+@app.get("/test_headers", tags=["client"])
+def test_headers(
+    x_data: str = Header(...),
+) -> JSONResponse:
+    """Test the headers."""
+    return JSONResponse(
+        {
+            "ok": True,
+            "data": x_data,
+        }
+    )
+
+
 @app.post("/v1/client_register", tags=["client"])
 def register(uid: str, x_client_api_key: str = Header(...)) -> JSONResponse:
     """Tries to register a device"""
@@ -242,7 +255,9 @@ def getlog(x_api_admin_key: str = ApiKeyHeader) -> PlainTextResponse:
 if ALLOW_DB_CLEAR:
     # clear database
     @app.delete("/clear", tags=["admin"])
-    async def clear(delete=False, x_api_admin_key: str = ApiKeyHeader) -> PlainTextResponse:
+    async def clear(
+        delete=False, x_api_admin_key: str = ApiKeyHeader
+    ) -> PlainTextResponse:
         """TODO - Add description."""
         if not is_authenticated(x_api_admin_key):
             return PlainTextResponse("Invalid API key", status_code=401)
@@ -264,7 +279,9 @@ def main() -> None:
     ):
         port = 8080
         webbrowser.open(f"http://localhost:{port}")
-        uvicorn.run("androidmonitor_backend.app:app", host="localhost", port=port, reload=True)
+        uvicorn.run(
+            "androidmonitor_backend.app:app", host="localhost", port=port, reload=True
+        )
 
 
 if __name__ == "__main__":
