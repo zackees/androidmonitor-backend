@@ -149,7 +149,7 @@ def add_uid(x_api_admin_key: str = ApiKeyHeader) -> JSONResponse:
         total = total % 10
         rand_str += str(total)
         # insert a - in the middle
-        rand_str = rand_str[:3] + "-" + rand_str[3:6] + "-" + rand_str[6:]
+        out_rand_str = rand_str[:3] + "-" + rand_str[3:6] + "-" + rand_str[6:]
         now = datetime.utcnow()
         # add it to the database
         try:
@@ -159,7 +159,7 @@ def add_uid(x_api_admin_key: str = ApiKeyHeader) -> JSONResponse:
             break
         except DuplicateError:
             continue
-    return JSONResponse({"ok": True, "uid": rand_str, "created": str(now)})
+    return JSONResponse({"ok": True, "uid": out_rand_str, "created": str(now)})
 
 
 @app.get("/test_headers", tags=["client"])
@@ -228,8 +228,12 @@ def log_file(
     for row in rows:
         json_data = row._asdict()
         for key in json_data:
+            # Make values safe for json and add formatting.
             value = json_data[key]
-            if isinstance(value, datetime):
+            if key == "uid":
+                value = value[:3] + "-" + value[3:6] + "-" + value[6:]
+                json_data[key] = value
+            elif isinstance(value, datetime):
                 json_data[key] = value.isoformat()
         out.append(json_data)
     return JSONResponse(out)

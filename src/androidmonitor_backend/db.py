@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 import secrets
 from typing import Any, Sequence
 
-
 from sqlalchemy import (
     Column,
     DateTime,
@@ -20,8 +19,7 @@ from sqlalchemy import (
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 from androidmonitor_backend.log import make_logger
-from androidmonitor_backend.settings import DB_URL
-
+from androidmonitor_backend.settings import DB_URL, IS_TEST
 
 class DuplicateError(Exception):
     """Duplicate error."""
@@ -116,6 +114,18 @@ def db_insert_uid(uid: str, created: datetime) -> None:
 def db_try_register(uid: str) -> tuple[bool, str]:
     """Try to register a device."""
     db_init_once()
+    if IS_TEST:
+        # Debugging if the uid is already registered. We don't want this
+        # to happen in production because it would be a security issue.
+        row = db_get_uid(uid)
+        recent_rows = db_get_recent()
+        print(recent_rows)
+        if row is None:
+            log.info("uid %s doesn't exist and might be expired", uid)
+            return False, "Error the token doesn't exist"
+        if row.token is not None:
+            log.info("uid %s already registered", uid)
+            return False, "Error the token is already registered"
     token128 = secrets.token_hex(64)  # 2 bytes per char
     with Session() as session:
         # update uid with token
