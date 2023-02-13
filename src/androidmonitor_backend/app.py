@@ -45,12 +45,12 @@ APP_DISPLAY_NAME = "AndroidMonitor-Backend"
 
 tags_metadata = [
     {
-        "name": "client",
-        "description": "Client api",
-    },
-    {
         "name": "admin",
         "description": "Admin control of registering clients",
+    },
+    {
+        "name": "client",
+        "description": "Client api",
     },
 ]
 

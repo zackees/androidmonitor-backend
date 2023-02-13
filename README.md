@@ -29,3 +29,7 @@
   * client:
     * begins operation
     * when uploading, the token is used to grant access to the /v1/upload endpoint
+
+## TODO
+
+  * [ ] UID clearing does not seem to work correctly
