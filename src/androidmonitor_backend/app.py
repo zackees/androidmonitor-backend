@@ -232,6 +232,7 @@ async def upload(
 
 @app.post("/test_upload", tags=["test"])
 async def test_upload(
+    x_uid: str = Header(...),
     datafile: UploadFile = File(...),
 ) -> PlainTextResponse:
     """TODO - Add description."""
