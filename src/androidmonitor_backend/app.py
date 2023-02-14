@@ -52,6 +52,10 @@ tags_metadata = [
         "name": "client",
         "description": "Client api",
     },
+    {
+        "name": "test",
+        "description": "Test api",
+    },
 ]
 
 
@@ -162,7 +166,7 @@ def add_uid(x_api_admin_key: str = ApiKeyHeader) -> JSONResponse:
     return JSONResponse({"ok": True, "uid": out_rand_str, "created": str(now)})
 
 
-@app.get("/test_headers", tags=["client"])
+@app.get("/test_headers", tags=["test"])
 def test_headers(
     x_data: str = Header(...),
 ) -> PlainTextResponse:
@@ -171,7 +175,9 @@ def test_headers(
 
 
 @app.post("/v1/client_register", tags=["client"])
-def register(x_uid: str = Header(...), x_client_api_key: str = Header(...)) -> JSONResponse:
+def register(
+    x_uid: str = Header(...), x_client_api_key: str = Header(...)
+) -> JSONResponse:
     """Tries to register a device"""
     if not is_authenticated(x_client_api_key):
         return JSONResponse({"error": "Invalid API key"}, status_code=401)
@@ -212,6 +218,21 @@ async def upload(
         await datafile.close()
         log.info("Downloaded file %s to %s", datafile.filename, temp_datapath)
         # shutil.move(temp_path, final_path)
+    return PlainTextResponse(f"Uploaded {datafile.filename} to {temp_datapath}")
+
+
+@app.post("/test_upload", tags=["test"])
+async def test_upload(
+    datafile: UploadFile = File(...),
+) -> PlainTextResponse:
+    """TODO - Add description."""
+    log.info("/test_upload with file: %s", datafile.filename)
+    if datafile.filename is None:
+        return PlainTextResponse("invalid filename", status_code=400)
+    with TemporaryDirectory() as temp_dir:
+        temp_datapath: str = os.path.join(temp_dir, datafile.filename)
+        await async_download(datafile, temp_datapath)
+        log.info("Download test file %s to %s", datafile.filename, temp_datapath)
     return PlainTextResponse(f"Uploaded {datafile.filename} to {temp_datapath}")
 
 

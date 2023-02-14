@@ -21,6 +21,7 @@ from sqlalchemy.orm import sessionmaker
 from androidmonitor_backend.log import make_logger
 from androidmonitor_backend.settings import DB_URL, IS_TEST
 
+
 class DuplicateError(Exception):
     """Duplicate error."""
 
