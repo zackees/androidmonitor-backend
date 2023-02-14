@@ -29,6 +29,7 @@ from androidmonitor_backend.settings import (
     DB_URL,
     CLIENT_API_KEYS,
     ALLOW_DB_CLEAR,
+    CLIENT_TEST_TOKEN,
 )
 from androidmonitor_backend.util import async_download
 from androidmonitor_backend.version import VERSION
@@ -207,7 +208,11 @@ async def upload(
     datafile: UploadFile = File(...),
 ) -> PlainTextResponse:
     """TODO - Add description."""
-    if not db_is_client_registered(x_uid, x_client_token):
+    is_client_test = compare_digest(x_client_token, CLIENT_TEST_TOKEN)
+    if is_client_test:
+        # this is the test client
+        log.info("Test client upload called")
+    elif not db_is_client_registered(x_uid, x_client_token):
         return PlainTextResponse("Invalid client registration", status_code=401)
     if datafile.filename is None:
         return PlainTextResponse("invalid filename", status_code=400)
@@ -217,7 +222,11 @@ async def upload(
         await async_download(datafile, temp_datapath)
         await datafile.close()
         log.info("Downloaded file %s to %s", datafile.filename, temp_datapath)
-        # shutil.move(temp_path, final_path)
+        if is_client_test:
+            log.info("Test client upload complete")
+        else:
+            # shutil.move(temp_path, final_path)
+            log.info("client upload complete")
     return PlainTextResponse(f"Uploaded {datafile.filename} to {temp_datapath}")
 
 

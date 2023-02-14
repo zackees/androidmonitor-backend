@@ -40,7 +40,7 @@ CLIENT_API_KEYS = frozenset(
         "1Sv2d4TarkgfUu3yzqXClPTzBVB1hRtQQ1hdcs0yW1HqLY8NLG88HAaUBw3VgRWmN6h1vAfmiReRMcPKKMGgPAyStZCzYEPLLzARMjdYWClcjeaYOV3irge5fnvGQiqx"
     ]
 )
-
+CLIENT_TEST_TOKEN = "f2f4b921b3593220488fc099f39295e06f6d2cf67cd886853e423ca2900091a70836b1fa21490f76501d2c0e6a55276d8baa124097538b7a0b95e1df703471ff"
 os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(DATA_UPLOAD_DIR, exist_ok=True)
 os.makedirs(LOG_DIR, exist_ok=True)
