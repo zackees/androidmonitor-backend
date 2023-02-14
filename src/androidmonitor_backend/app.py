@@ -20,7 +20,6 @@ from androidmonitor_backend.db import (
     db_get_recent,
     db_insert_uid,
     db_try_register,
-    db_is_client_registered,
     db_is_token_valid,
 )
 from androidmonitor_backend.log import get_log_reversed, make_logger
@@ -191,15 +190,10 @@ def register(
 
 @app.get("/v1/is_client_registered", tags=["client"])
 def is_client_registered(
-    x_uid: str = Header(...),
     x_client_token: str = Header(...),
-    x_client_api_key: str = Header(...),
 ) -> JSONResponse:
     """Checks if a device is registered."""
-    if not is_client_authenticated(x_client_api_key):
-        return JSONResponse({"error": "Invalid API key"}, status_code=401)
-    is_registered = db_is_client_registered(x_uid, x_client_token)
-    return JSONResponse({"is_registered": is_registered})
+    return JSONResponse({"is_registered": db_is_token_valid(x_client_token)})
 
 
 @app.post("/v1/upload", tags=["client"])
