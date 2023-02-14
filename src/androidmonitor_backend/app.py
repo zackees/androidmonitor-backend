@@ -199,6 +199,7 @@ def is_client_registered(
 @app.post("/v1/upload", tags=["client"])
 async def upload(
     x_client_token: str = Header(...),
+    metadata: UploadFile = File(...),
     datafile: UploadFile = File(...),
 ) -> PlainTextResponse:
     """TODO - Add description."""
@@ -212,16 +213,12 @@ async def upload(
         return PlainTextResponse("invalid filename", status_code=400)
     log.info("Upload called with file: %s", datafile.filename)
     with TemporaryDirectory() as temp_dir:
-        temp_datapath: str = os.path.join(temp_dir, datafile.filename)
-        await async_download(datafile, temp_datapath)
-        await datafile.close()
-        log.info("Downloaded file %s to %s", datafile.filename, temp_datapath)
-        if is_client_test:
-            log.info("Test client upload complete")
-        else:
-            # shutil.move(temp_path, final_path)
-            log.info("client upload complete")
-    return PlainTextResponse(f"Uploaded {datafile.filename} to {temp_datapath}")
+        for file in [metadata, datafile]:
+            temp_path = os.path.join(temp_dir, file.filename)
+            await async_download(file, temp_path)
+            await file.close()
+            log.info("Downloaded file %s to %s", file.filename, temp_path)
+    return PlainTextResponse(f"Uploaded {metadata.filename} and {datafile.filename}")
 
 
 @app.post("/test_upload", tags=["test"])
