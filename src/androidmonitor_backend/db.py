@@ -148,7 +148,7 @@ def db_try_register(uid: str) -> tuple[bool, str]:
         return True, token128
 
 
-def db_is_client_registered(uid: str, token: str) -> bool:
+def db_is_client_registered(token: str, uid: str) -> bool:
     """Returns true if the client with the token is registered."""
     db_init_once()
     with engine.connect() as conn:
@@ -157,6 +157,16 @@ def db_is_client_registered(uid: str, token: str) -> bool:
             .where(uid_table.c.uid == uid)
             .where(uid_table.c.token == token)
         )
+        result = conn.execute(select)
+        rows = result.fetchall()
+        return len(rows) > 0
+
+
+def db_is_token_valid(token: str) -> bool:
+    """Returns true if the token is valid."""
+    db_init_once()
+    with engine.connect() as conn:
+        select = uid_table.select().where(uid_table.c.token == token)
         result = conn.execute(select)
         rows = result.fetchall()
         return len(rows) > 0

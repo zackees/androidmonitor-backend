@@ -21,6 +21,7 @@ from androidmonitor_backend.db import (
     db_insert_uid,
     db_try_register,
     db_is_client_registered,
+    db_is_token_valid,
 )
 from androidmonitor_backend.log import get_log_reversed, make_logger
 from androidmonitor_backend.settings import (
@@ -203,7 +204,6 @@ def is_client_registered(
 
 @app.post("/v1/upload", tags=["client"])
 async def upload(
-    x_uid: str = Header(...),
     x_client_token: str = Header(...),
     datafile: UploadFile = File(...),
 ) -> PlainTextResponse:
@@ -212,7 +212,7 @@ async def upload(
     if is_client_test:
         # this is the test client
         log.info("Test client upload called")
-    elif not db_is_client_registered(x_uid, x_client_token):
+    elif not db_is_token_valid(x_client_token):
         return PlainTextResponse("Invalid client registration", status_code=401)
     if datafile.filename is None:
         return PlainTextResponse("invalid filename", status_code=400)
