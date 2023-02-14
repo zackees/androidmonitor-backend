@@ -201,33 +201,53 @@ def is_client_registered(
     return JSONResponse({"is_registered": is_registered})
 
 
-@app.post("/v1/upload", tags=["client"])
-async def upload(
-    x_uid: str = Header(...),
-    x_client_token: str = Header(...),
-    datafile: UploadFile = File(...),
-) -> PlainTextResponse:
-    """TODO - Add description."""
-    is_client_test = compare_digest(x_client_token, CLIENT_TEST_TOKEN)
-    if is_client_test:
-        # this is the test client
-        log.info("Test client upload called")
-    elif not db_is_client_registered(x_uid, x_client_token):
-        return PlainTextResponse("Invalid client registration", status_code=401)
-    if datafile.filename is None:
-        return PlainTextResponse("invalid filename", status_code=400)
-    log.info("Upload called with file: %s", datafile.filename)
-    with TemporaryDirectory() as temp_dir:
-        temp_datapath: str = os.path.join(temp_dir, datafile.filename)
-        await async_download(datafile, temp_datapath)
-        await datafile.close()
-        log.info("Downloaded file %s to %s", datafile.filename, temp_datapath)
+if False:  # pylint: disable=using-constant-test
+
+    @app.post("/v1/upload", tags=["client"])
+    async def upload(
+        x_uid: str = Header(...),
+        x_client_token: str = Header(...),
+        datafile: UploadFile = File(...),
+    ) -> PlainTextResponse:
+        """TODO - Add description."""
+        is_client_test = compare_digest(x_client_token, CLIENT_TEST_TOKEN)
         if is_client_test:
-            log.info("Test client upload complete")
-        else:
-            # shutil.move(temp_path, final_path)
-            log.info("client upload complete")
-    return PlainTextResponse(f"Uploaded {datafile.filename} to {temp_datapath}")
+            # this is the test client
+            log.info("Test client upload called")
+        elif not db_is_client_registered(x_uid, x_client_token):
+            return PlainTextResponse("Invalid client registration", status_code=401)
+        if datafile.filename is None:
+            return PlainTextResponse("invalid filename", status_code=400)
+        log.info("Upload called with file: %s", datafile.filename)
+        with TemporaryDirectory() as temp_dir:
+            temp_datapath: str = os.path.join(temp_dir, datafile.filename)
+            await async_download(datafile, temp_datapath)
+            await datafile.close()
+            log.info("Downloaded file %s to %s", datafile.filename, temp_datapath)
+            if is_client_test:
+                log.info("Test client upload complete")
+            else:
+                # shutil.move(temp_path, final_path)
+                log.info("client upload complete")
+        return PlainTextResponse(f"Uploaded {datafile.filename} to {temp_datapath}")
+
+else:
+
+    @app.post("/v1/upload", tags=["client"])
+    async def upload(
+        x_uid: str = Header(...),  # pylint: disable=unused-argument
+        x_client_token: str = Header(...),  # pylint: disable=unused-argument
+        datafile: UploadFile = File(...),
+    ) -> PlainTextResponse:
+        """TODO - Add description."""
+        log.info("/v1/upload with file: %s", datafile.filename)
+        if datafile.filename is None:
+            return PlainTextResponse("invalid filename", status_code=400)
+        with TemporaryDirectory() as temp_dir:
+            temp_datapath: str = os.path.join(temp_dir, datafile.filename)
+            await async_download(datafile, temp_datapath)
+            log.info("Download test file %s to %s", datafile.filename, temp_datapath)
+        return PlainTextResponse(f"Uploaded {datafile.filename} to {temp_datapath}")
 
 
 @app.post("/test_upload", tags=["test"])
