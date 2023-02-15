@@ -214,6 +214,7 @@ async def upload(
     log.info("Upload called with file: %s", vidfile.filename)
     with TemporaryDirectory() as temp_dir:
         for file in [metadata, vidfile]:
+            assert file.filename is not None
             temp_path = os.path.join(temp_dir, file.filename)
             await async_download(file, temp_path)
             await file.close()
