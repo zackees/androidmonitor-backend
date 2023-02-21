@@ -34,6 +34,7 @@ from androidmonitor_backend.settings import (
     CLIENT_API_KEYS,
     CLIENT_TEST_TOKEN,
     DB_URL,
+    DOWNLOAD_APK_FILE,
     IS_TEST,
     META_UPLOAD_DIR,
     VIDEO_UPLOAD_DIR,
@@ -197,6 +198,13 @@ def test_download_meta() -> FileResponse:
     """Test the download."""
     file = os.path.join(TEST_UPLOAD_META_DIR, "meta.json")
     return FileResponse(file)
+
+
+# download apk
+@app.get("/test/download/apk", tags=["test"])
+def test_download_apk() -> FileResponse:
+    """Test the download."""
+    return FileResponse(DOWNLOAD_APK_FILE)
 
 
 @app.post("/v1/client_register", tags=["client"])

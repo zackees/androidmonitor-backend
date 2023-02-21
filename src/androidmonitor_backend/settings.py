@@ -6,9 +6,8 @@ Settings
 
 import os
 
-PROJECT_ROOT = os.path.dirname(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-)
+HERE = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(os.path.dirname(HERE))
 DEFAULT_DATA_DIR = os.path.join(PROJECT_ROOT, "data")
 DATA_DIR = os.getenv("DATA_DIR", DEFAULT_DATA_DIR)
 DATA_UPLOAD_DIR = os.path.join(DATA_DIR, "upload")
@@ -43,8 +42,11 @@ CLIENT_API_KEYS = frozenset(
 CLIENT_TEST_TOKEN = "f2f4b921b3593220488fc099f39295e06f6d2cf67cd886853e423ca2900091a70836b1fa21490f76501d2c0e6a55276d8baa124097538b7a0b95e1df703471ff"
 VIDEO_UPLOAD_DIR = os.path.join(DATA_UPLOAD_DIR, "video")
 META_UPLOAD_DIR = os.path.join(DATA_UPLOAD_DIR, "meta")
+DOWNLOAD_DIR = os.path.join(HERE, "download")
+DOWNLOAD_APK_FILE = os.path.join(DOWNLOAD_DIR, "apk-release.apk")
 os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(DATA_UPLOAD_DIR, exist_ok=True)
 os.makedirs(LOG_DIR, exist_ok=True)
 os.makedirs(VIDEO_UPLOAD_DIR, exist_ok=True)
 os.makedirs(META_UPLOAD_DIR, exist_ok=True)
+os.makedirs(DOWNLOAD_DIR, exist_ok=True)
