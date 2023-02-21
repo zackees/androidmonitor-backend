@@ -2,10 +2,10 @@
 
 set -e
 
-echo Running black.
-black src tests
 echo Running isort
 isort src tests
+echo Running black.
+black src tests
 echo Running flake8
 flake8 src tests
 echo Running pylint src

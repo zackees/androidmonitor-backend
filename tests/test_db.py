@@ -19,12 +19,12 @@ os.environ["DB_URL"] = f"sqlite:///{DB_DIR}/db.sqlite3"
 from androidmonitor_backend.db import (
     DuplicateError,
     db_clear,
-    db_get_recent,
-    db_insert_uid,
-    db_try_register,
     db_expire_old_uids,
+    db_get_recent,
     db_get_uid,
+    db_insert_uid,
     db_is_client_registered,
+    db_try_register,
 )
 
 

@@ -13,10 +13,10 @@ from colorama import just_fix_windows_console
 from fastapi import FastAPI, File, Header, UploadFile  # type: ignore
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import (
+    FileResponse,
     JSONResponse,
     PlainTextResponse,
     RedirectResponse,
-    FileResponse,
 )
 
 from androidmonitor_backend.db import (
@@ -24,19 +24,19 @@ from androidmonitor_backend.db import (
     db_clear,
     db_get_recent,
     db_insert_uid,
-    db_try_register,
     db_is_token_valid,
+    db_try_register,
 )
 from androidmonitor_backend.log import get_log_reversed, make_logger
 from androidmonitor_backend.settings import (
-    API_ADMIN_KEY,
-    IS_TEST,
-    DB_URL,
-    CLIENT_API_KEYS,
     ALLOW_DB_CLEAR,
+    API_ADMIN_KEY,
+    CLIENT_API_KEYS,
     CLIENT_TEST_TOKEN,
-    VIDEO_UPLOAD_DIR,
+    DB_URL,
+    IS_TEST,
     META_UPLOAD_DIR,
+    VIDEO_UPLOAD_DIR,
 )
 from androidmonitor_backend.util import async_download
 from androidmonitor_backend.version import VERSION
@@ -318,8 +318,8 @@ if ALLOW_DB_CLEAR:
 
 def main() -> None:
     """Start the app."""
-    import webbrowser  # pylint: disable=import-outside-toplevel
     import subprocess  # pylint: disable=import-outside-toplevel
+    import webbrowser  # pylint: disable=import-outside-toplevel
 
     with subprocess.Popen(
         ["supervisord", "-c", "supervisord.conf"],

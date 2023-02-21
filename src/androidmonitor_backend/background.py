@@ -5,9 +5,9 @@ Background tasks
 import sys
 import time
 
-from androidmonitor_backend.log import make_logger
 from androidmonitor_backend.db import db_expire_old_uids
-from androidmonitor_backend.settings import TASK_SLEEP_TIME, EXPIRE_UID_TIME
+from androidmonitor_backend.log import make_logger
+from androidmonitor_backend.settings import EXPIRE_UID_TIME, TASK_SLEEP_TIME
 
 log = make_logger(__name__, "background.log")
 

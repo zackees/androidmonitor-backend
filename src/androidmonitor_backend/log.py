@@ -9,10 +9,10 @@ from concurrent_log_handler import ConcurrentRotatingFileHandler  # type: ignore
 from file_read_backwards import FileReadBackwards  # type: ignore
 
 from androidmonitor_backend.settings import (
+    LOG_DIR,
     LOG_HISTORY,
     LOG_SIZE,
     LOG_SYSTEM,
-    LOG_DIR,
     LOGGING_FMT,
     LOGGING_USE_GZIP,
 )

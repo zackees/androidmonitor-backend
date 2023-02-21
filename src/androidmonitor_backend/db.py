@@ -2,8 +2,8 @@
 Database.
 """
 
-from datetime import datetime, timedelta
 import secrets
+from datetime import datetime, timedelta
 from typing import Any, Sequence
 
 from sqlalchemy import (
@@ -18,6 +18,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
+
 from androidmonitor_backend.log import make_logger
 from androidmonitor_backend.settings import DB_URL, IS_TEST
 
