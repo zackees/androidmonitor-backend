@@ -18,6 +18,7 @@ from fastapi.responses import (
     PlainTextResponse,
     RedirectResponse,
 )
+from fastapi.staticfiles import StaticFiles
 
 from androidmonitor_backend.db import (
     DuplicateError,
@@ -34,10 +35,11 @@ from androidmonitor_backend.settings import (
     CLIENT_API_KEYS,
     CLIENT_TEST_TOKEN,
     DB_URL,
-    DOWNLOAD_APK_FILE,
     IS_TEST,
     META_UPLOAD_DIR,
     VIDEO_UPLOAD_DIR,
+    DOWNLOAD_DIR,
+    DOWNLOAD_APK_FILE
 )
 from androidmonitor_backend.util import async_download
 from androidmonitor_backend.version import VERSION
@@ -133,6 +135,12 @@ def is_client_authenticated(client_api_key: str) -> bool:
             return True
     return False
 
+app.mount("/download", StaticFiles(directory=DOWNLOAD_DIR, html=True, check_dir=True), name="download")
+
+@app.get("/apk", tags=["client"])
+async def apk() -> FileResponse:
+    """Get the apk."""
+    return FileResponse(DOWNLOAD_APK_FILE, media_type="application/octet-stream", filename="androidmonitor.apk")
 
 @app.get("/", include_in_schema=False)
 async def index() -> RedirectResponse:
@@ -198,12 +206,6 @@ def test_download_meta() -> FileResponse:
     """Test the download."""
     file = os.path.join(TEST_UPLOAD_META_DIR, "meta.json")
     return FileResponse(file)
-
-
-@app.get("/test/download/apk", tags=["test"])
-def test_download_apk() -> FileResponse:
-    """Test the download."""
-    return FileResponse(DOWNLOAD_APK_FILE)
 
 
 @app.post("/v1/client_register", tags=["client"])
@@ -342,4 +344,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    print(f"Download dir: {DOWNLOAD_DIR}")
     main()
