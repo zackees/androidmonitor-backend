@@ -200,7 +200,6 @@ def test_download_meta() -> FileResponse:
     return FileResponse(file)
 
 
-# download apk
 @app.get("/test/download/apk", tags=["test"])
 def test_download_apk() -> FileResponse:
     """Test the download."""
