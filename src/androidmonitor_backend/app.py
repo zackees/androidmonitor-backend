@@ -77,16 +77,21 @@ tags_metadata = [
 def app_description() -> str:
     """Get the app description."""
     lines = []
+    year_str = datetime.utcnow().strftime("%Y")
+    lines.append(f"<small>© InternetWatchDogs {year_str}</small>")
+    lines.append("## About")
+    lines.append("\nHandles user registeration and administration of the AndroidMonitor Network")
+    lines.append("## Info")
     lines.append(f"  * Version: `{VERSION}`")
     lines.append("  * Started at: `" + STARTUP_DATETIME.isoformat() + " UTC`")
     if IS_TEST:
         lines.append("  * Running in `TEST` mode")
-        lines.append("  * x-api-admin-key: *TEST MODE - NO AUTHENTICATION*")
-        lines.append("  * DB_URL: " + "`DB_URL`")
-        lines.append("  * ALLOW_DB_CLEAR: " + f"`{ALLOW_DB_CLEAR}`")
-        lines.append("  * CLIENT_API_KEYS:")
+        lines.append("    * x-api-admin-key: *TEST MODE - NO AUTHENTICATION*")
+        lines.append("    * DB_URL: " + "`DB_URL`")
+        lines.append("    * ALLOW_DB_CLEAR: " + f"`{ALLOW_DB_CLEAR}`")
+        lines.append("    * CLIENT_API_KEYS:")
         for i, client_key in enumerate(CLIENT_API_KEYS):
-            lines.append(f"    * `{i}: {client_key}`")
+            lines.append(f"    * {i}: `{client_key}`")
     else:
         lines.append("  * Running in PRODUCTION mode")
     return "\n".join(lines)
@@ -96,9 +101,6 @@ app = FastAPI(
     title=APP_DISPLAY_NAME,
     version=VERSION,
     redoc_url=None,
-    license_info={
-        "name": "Handles all the backend stuff for AndroidMonitor",
-    },
     description=app_description(),
     openapi_tags=tags_metadata,
 )
