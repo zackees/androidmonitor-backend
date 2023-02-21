@@ -198,14 +198,15 @@ def test_headers(
 def test_download_video() -> FileResponse:
     """Test the download."""
     file = os.path.join(TEST_UPLOAD_VID_DIR, "video.mp4")
-    return FileResponse(file)
+    return FileResponse(file, media_type="application/octet-stream", filename="video.mp4")
+
 
 
 @app.get("/test/download/meta", tags=["test"])
 def test_download_meta() -> FileResponse:
     """Test the download."""
     file = os.path.join(TEST_UPLOAD_META_DIR, "meta.json")
-    return FileResponse(file)
+    return FileResponse(file, media_type="text/plain", filename="meta.json")
 
 
 @app.post("/v1/client_register", tags=["client"])
