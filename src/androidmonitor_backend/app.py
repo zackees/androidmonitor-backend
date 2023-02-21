@@ -12,7 +12,12 @@ import uvicorn  # type: ignore
 from colorama import just_fix_windows_console
 from fastapi import FastAPI, File, Header, UploadFile  # type: ignore
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, PlainTextResponse, RedirectResponse
+from fastapi.responses import (
+    JSONResponse,
+    PlainTextResponse,
+    RedirectResponse,
+    FileResponse,
+)
 
 from androidmonitor_backend.db import (
     DuplicateError,
@@ -30,6 +35,8 @@ from androidmonitor_backend.settings import (
     CLIENT_API_KEYS,
     ALLOW_DB_CLEAR,
     CLIENT_TEST_TOKEN,
+    VIDEO_UPLOAD_DIR,
+    META_UPLOAD_DIR,
 )
 from androidmonitor_backend.util import async_download
 from androidmonitor_backend.version import VERSION
@@ -39,6 +46,9 @@ just_fix_windows_console()
 STARTUP_DATETIME = datetime.utcnow()
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+TEST_UPLOAD_VID_DIR = os.path.join(VIDEO_UPLOAD_DIR, "upload_vid")
+TEST_UPLOAD_META_DIR = os.path.join(META_UPLOAD_DIR, "upload_meta")
 
 log = make_logger(__name__)
 
@@ -175,6 +185,20 @@ def test_headers(
     return PlainTextResponse(f"data: {x_data}")
 
 
+@app.get("/test/download/video", tags=["test"])
+def test_download_video() -> FileResponse:
+    """Test the download."""
+    file = os.path.join(TEST_UPLOAD_VID_DIR, "video.mp4")
+    return FileResponse(file)
+
+
+@app.get("/test/download/meta", tags=["test"])
+def test_download_meta() -> FileResponse:
+    """Test the download."""
+    file = os.path.join(TEST_UPLOAD_META_DIR, "meta.json")
+    return FileResponse(file)
+
+
 @app.post("/v1/client_register", tags=["client"])
 def register(
     x_uid: str = Header(...), x_client_api_key: str = Header(...)
@@ -215,7 +239,12 @@ async def upload(
     with TemporaryDirectory() as temp_dir:
         for file in [metadata, vidfile]:
             assert file.filename is not None
-            temp_path = os.path.join(temp_dir, file.filename)
+            if file == metadata:
+                log.info("Metadata file: %s", file.filename)
+                temp_path = os.path.join(temp_dir, "metadata.json")
+            else:
+                log.info("Video file: %s", file.filename)
+                temp_path = os.path.join(temp_dir, "video.mp4")
             await async_download(file, temp_path)
             await file.close()
             log.info("Downloaded file %s to %s", file.filename, temp_path)
