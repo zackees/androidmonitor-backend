@@ -149,3 +149,4 @@ Thumbs.db
 node_modules
 package-lock.json
 tests/test_data/tmp/generate_files/
+upload/

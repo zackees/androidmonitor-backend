@@ -39,7 +39,8 @@ from androidmonitor_backend.settings import (
     META_UPLOAD_DIR,
     VIDEO_UPLOAD_DIR,
     DOWNLOAD_DIR,
-    DOWNLOAD_APK_FILE
+    DOWNLOAD_APK_FILE,
+    UPLOAD_DIR
 )
 from androidmonitor_backend.util import async_download
 from androidmonitor_backend.version import VERSION
@@ -197,7 +198,7 @@ def test_headers(
 @app.get("/test/download/video", tags=["test"])
 def test_download_video() -> FileResponse:
     """Test the download."""
-    file = os.path.join(TEST_UPLOAD_VID_DIR, "video.mp4")
+    file = os.path.join(UPLOAD_DIR, "video.mp4")
     return FileResponse(file, media_type="video/mp4", filename="video.mp4")
 
 
@@ -205,7 +206,7 @@ def test_download_video() -> FileResponse:
 @app.get("/test/download/meta", tags=["test"])
 def test_download_meta() -> FileResponse:
     """Test the download."""
-    file = os.path.join(TEST_UPLOAD_META_DIR, "meta.json")
+    file = os.path.join(UPLOAD_DIR, "meta.json")
     return FileResponse(file, media_type="text/plain", filename="meta.json")
 
 
@@ -246,18 +247,17 @@ async def upload(
     if vidfile.filename is None:
         return PlainTextResponse("invalid filename", status_code=400)
     log.info("Upload called with file: %s", vidfile.filename)
-    with TemporaryDirectory() as temp_dir:
-        for file in [metadata, vidfile]:
-            assert file.filename is not None
-            if file == metadata:
-                log.info("Metadata file: %s", file.filename)
-                temp_path = os.path.join(temp_dir, "metadata.json")
-            else:
-                log.info("Video file: %s", file.filename)
-                temp_path = os.path.join(temp_dir, "video.mp4")
-            await async_download(file, temp_path)
-            await file.close()
-            log.info("Downloaded file %s to %s", file.filename, temp_path)
+    for file in [metadata, vidfile]:
+        assert file.filename is not None
+        if file == metadata:
+            log.info("Metadata file: %s", file.filename)
+            temp_path = os.path.join(UPLOAD_DIR, "meta.json")
+        else:
+            log.info("Video file: %s", file.filename)
+            temp_path = os.path.join(UPLOAD_DIR, "video.mp4")
+        await async_download(file, temp_path)
+        await file.close()
+        log.info("Uploaded file %s to %s", file.filename, temp_path)
     return PlainTextResponse(f"Uploaded {metadata.filename} and {vidfile.filename}")
 
 
