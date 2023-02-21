@@ -99,7 +99,7 @@ def app_description() -> str:
         for i, client_key in enumerate(CLIENT_API_KEYS):
             lines.append(f"      * `{client_key}`")
         lines.append("    * Quick Links")
-        lines.append(f'      * [Register User]({URL}/v1/add_uid)')
+        lines.append(f'      * [Register User]({URL}/v1/add_uid/plaintext)')
     else:
         lines.append("  * Running in PRODUCTION mode")
     lines.append(get_form())
@@ -193,7 +193,7 @@ def _add_uid() -> tuple[bool, str, str]:
             continue
     return True, out_rand_str, str(now)
 
-@app.get("/v1/add_uid/json", tags=["admin"])
+@app.get("/v1/add_uid", tags=["admin"])
 def add_uid(x_api_admin_key: str = ApiKeyHeader) -> JSONResponse:
     """TODO - Add description."""
     if not is_authenticated(x_api_admin_key):
@@ -202,7 +202,7 @@ def add_uid(x_api_admin_key: str = ApiKeyHeader) -> JSONResponse:
     return JSONResponse({"ok": ok, "uid": uid, "created": created})
 
 
-@app.get("/v1/add_uid", tags=["admin"])
+@app.get("/v1/add_uid/plaintext", tags=["admin"])
 def add_uid_plaintext(x_api_admin_key: str = ApiKeyHeader) -> PlainTextResponse:
     if not is_authenticated(x_api_admin_key):
         return PlainTextResponse('"error": "Invalid API key"', status_code=401)
