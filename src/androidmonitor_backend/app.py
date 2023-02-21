@@ -97,7 +97,7 @@ def app_description() -> str:
         lines.append("    * ALLOW_DB_CLEAR: " + f"`{ALLOW_DB_CLEAR}`")
         lines.append("    * CLIENT_API_KEYS:")
         for i, client_key in enumerate(CLIENT_API_KEYS):
-            lines.append(f"    * {i}: `{client_key}`")
+            lines.append(f"      * `{client_key}`")
         lines.append("  * Quick Links")
         lines.append(f'    * [Register User]({URL}/v1/add_uid)')
     else:
