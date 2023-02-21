@@ -50,4 +50,3 @@ os.makedirs(LOG_DIR, exist_ok=True)
 os.makedirs(VIDEO_UPLOAD_DIR, exist_ok=True)
 os.makedirs(META_UPLOAD_DIR, exist_ok=True)
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
-
