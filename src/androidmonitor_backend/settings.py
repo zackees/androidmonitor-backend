@@ -6,6 +6,7 @@ Settings
 
 import os
 
+URL = os.environ.get('URL', "http://localhost:8080")
 HERE = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(os.path.dirname(HERE))
 DEFAULT_DATA_DIR = os.path.join(PROJECT_ROOT, "data")

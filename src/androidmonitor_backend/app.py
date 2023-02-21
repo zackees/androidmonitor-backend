@@ -34,6 +34,7 @@ from androidmonitor_backend.settings import (
     API_ADMIN_KEY,
     CLIENT_API_KEYS,
     CLIENT_TEST_TOKEN,
+    URL,
     DB_URL,
     IS_TEST,
     META_UPLOAD_DIR,
@@ -73,6 +74,11 @@ tags_metadata = [
     },
 ]
 
+def get_form() -> str:
+    """Get form"""
+    out: list[str] = []
+    return "\n".join(out)
+
 
 def app_description() -> str:
     """Get the app description."""
@@ -87,13 +93,16 @@ def app_description() -> str:
     if IS_TEST:
         lines.append("  * Running in `TEST` mode")
         lines.append("    * x-api-admin-key: *TEST MODE - NO AUTHENTICATION*")
-        lines.append("    * DB_URL: " + "`DB_URL`")
+        lines.append("    * DB_URL: " + f"`{DB_URL}`")
         lines.append("    * ALLOW_DB_CLEAR: " + f"`{ALLOW_DB_CLEAR}`")
         lines.append("    * CLIENT_API_KEYS:")
         for i, client_key in enumerate(CLIENT_API_KEYS):
             lines.append(f"    * {i}: `{client_key}`")
+        lines.append("  * Quick Links")
+        lines.append(f'    * [Register User]({URL}/v1/add_uid)')
     else:
         lines.append("  * Running in PRODUCTION mode")
+    lines.append(get_form())
     return "\n".join(lines)
 
 
@@ -160,11 +169,7 @@ async def info() -> PlainTextResponse:
     return PlainTextResponse("\n".join(lines))
 
 
-@app.post("/v1/add_uid", tags=["admin"])
-def add_uid(x_api_admin_key: str = ApiKeyHeader) -> JSONResponse:
-    """TODO - Add description."""
-    if not is_authenticated(x_api_admin_key):
-        return JSONResponse({"error": "Invalid API key"}, status_code=401)
+def _add_uid() -> tuple[bool, str, str]:
     while True:
         # generate a random 8 digit number
         random_value = random.randint(0, 99999999)
@@ -186,7 +191,25 @@ def add_uid(x_api_admin_key: str = ApiKeyHeader) -> JSONResponse:
             break
         except DuplicateError:
             continue
-    return JSONResponse({"ok": True, "uid": out_rand_str, "created": str(now)})
+    return True, out_rand_str, str(now)
+
+@app.get("/v1/add_uid/json", tags=["admin"])
+def add_uid(x_api_admin_key: str = ApiKeyHeader) -> JSONResponse:
+    """TODO - Add description."""
+    if not is_authenticated(x_api_admin_key):
+        return JSONResponse({"error": "Invalid API key"}, status_code=401)
+    ok, uid, created = _add_uid()
+    return JSONResponse({"ok": ok, "uid": uid, "created": created})
+
+
+@app.get("/v1/add_uid", tags=["admin"])
+def add_uid_plaintext(x_api_admin_key: str = ApiKeyHeader) -> PlainTextResponse:
+    if not is_authenticated(x_api_admin_key):
+        return PlainTextResponse('"error": "Invalid API key"', status_code=401)
+    ok, uid, created = _add_uid()
+    out: str = f"ok: {ok}\nuid: {uid}"
+    return PlainTextResponse(out, status_code=200 if ok else 500)
+
 
 
 @app.get("/test_headers", tags=["test"])
