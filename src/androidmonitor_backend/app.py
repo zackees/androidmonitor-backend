@@ -198,7 +198,7 @@ def test_headers(
 def test_download_video() -> FileResponse:
     """Test the download."""
     file = os.path.join(TEST_UPLOAD_VID_DIR, "video.mp4")
-    return FileResponse(file, media_type="application/octet-stream", filename="video.mp4")
+    return FileResponse(file, media_type="video/mp4", filename="video.mp4")
 
 
 
