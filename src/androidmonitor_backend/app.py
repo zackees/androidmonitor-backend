@@ -77,16 +77,16 @@ tags_metadata = [
 def app_description() -> str:
     """Get the app description."""
     lines = []
-    lines.append("  * Version: " + VERSION)
-    lines.append("  * Started at: " + STARTUP_DATETIME.isoformat() + " UTC")
+    lines.append(f"  * Version: `{VERSION}`")
+    lines.append("  * Started at: `" + STARTUP_DATETIME.isoformat() + " UTC`")
     if IS_TEST:
-        lines.append("  * Running in TEST mode")
-        lines.append("  * API_KEY: " + API_ADMIN_KEY)
-        lines.append("  * DB_URL: " + DB_URL)
-        lines.append("  * ALLOW_DB_CLEAR: " + str(ALLOW_DB_CLEAR))
+        lines.append("  * Running in `TEST` mode")
+        lines.append("  * x-api-admin-key: *TEST MODE - NO AUTHENTICATION*")
+        lines.append("  * DB_URL: " + "`DB_URL`")
+        lines.append("  * ALLOW_DB_CLEAR: " + f"`{ALLOW_DB_CLEAR}`")
         lines.append("  * CLIENT_API_KEYS:")
         for i, client_key in enumerate(CLIENT_API_KEYS):
-            lines.append(f"    * {i}: {client_key}")
+            lines.append(f"    * `{i}: {client_key}`")
     else:
         lines.append("  * Running in PRODUCTION mode")
     return "\n".join(lines)
