@@ -34,14 +34,14 @@ from androidmonitor_backend.settings import (
     API_ADMIN_KEY,
     CLIENT_API_KEYS,
     CLIENT_TEST_TOKEN,
-    URL,
     DB_URL,
+    DOWNLOAD_APK_FILE,
+    DOWNLOAD_DIR,
     IS_TEST,
     META_UPLOAD_DIR,
+    UPLOAD_DIR,
+    URL,
     VIDEO_UPLOAD_DIR,
-    DOWNLOAD_DIR,
-    DOWNLOAD_APK_FILE,
-    UPLOAD_DIR
 )
 from androidmonitor_backend.util import async_download
 from androidmonitor_backend.version import VERSION
@@ -74,6 +74,7 @@ tags_metadata = [
     },
 ]
 
+
 def get_form() -> str:
     """Get form"""
     out: list[str] = []
@@ -86,7 +87,9 @@ def app_description() -> str:
     year_str = datetime.utcnow().strftime("%Y")
     lines.append(f"<small>© InternetWatchDogs {year_str}</small>")
     lines.append("## About")
-    lines.append("\nHandles user registeration and administration of the AndroidMonitor Network")
+    lines.append(
+        "\nHandles user registeration and administration of the AndroidMonitor Network"
+    )
     lines.append("## Info")
     lines.append(f"  * Version: `{VERSION}`")
     lines.append("  * Started at: `" + STARTUP_DATETIME.isoformat() + " UTC`")
@@ -96,10 +99,10 @@ def app_description() -> str:
         lines.append("    * DB_URL: " + f"`{DB_URL}`")
         lines.append("    * ALLOW_DB_CLEAR: " + f"`{ALLOW_DB_CLEAR}`")
         lines.append("    * CLIENT_API_KEYS:")
-        for i, client_key in enumerate(CLIENT_API_KEYS):
+        for client_key in CLIENT_API_KEYS:
             lines.append(f"      * `{client_key}`")
         lines.append("    * Quick Links")
-        lines.append(f'      * [Register User]({URL}/v1/add_uid/plaintext)')
+        lines.append(f"      * [Register User]({URL}/v1/add_uid/plaintext)")
     else:
         lines.append("  * Running in PRODUCTION mode")
     lines.append(get_form())
@@ -147,12 +150,23 @@ def is_client_authenticated(client_api_key: str) -> bool:
             return True
     return False
 
-app.mount("/download", StaticFiles(directory=DOWNLOAD_DIR, html=True, check_dir=True), name="download")
+
+app.mount(
+    "/download",
+    StaticFiles(directory=DOWNLOAD_DIR, html=True, check_dir=True),
+    name="download",
+)
+
 
 @app.get("/apk", tags=["client"])
 async def apk() -> FileResponse:
     """Get the apk."""
-    return FileResponse(DOWNLOAD_APK_FILE, media_type="application/octet-stream", filename="androidmonitor.apk")
+    return FileResponse(
+        DOWNLOAD_APK_FILE,
+        media_type="application/octet-stream",
+        filename="androidmonitor.apk",
+    )
+
 
 @app.get("/", include_in_schema=False)
 async def index() -> RedirectResponse:
@@ -193,6 +207,7 @@ def _add_uid() -> tuple[bool, str, str]:
             continue
     return True, out_rand_str, str(now)
 
+
 @app.get("/v1/add_uid", tags=["admin"])
 def add_uid(x_api_admin_key: str = ApiKeyHeader) -> JSONResponse:
     """TODO - Add description."""
@@ -204,12 +219,12 @@ def add_uid(x_api_admin_key: str = ApiKeyHeader) -> JSONResponse:
 
 @app.get("/v1/add_uid/plaintext", tags=["admin"])
 def add_uid_plaintext(x_api_admin_key: str = ApiKeyHeader) -> PlainTextResponse:
+    """Returns the uid in plaintext."""
     if not is_authenticated(x_api_admin_key):
         return PlainTextResponse('"error": "Invalid API key"', status_code=401)
-    ok, uid, created = _add_uid()
+    ok, uid, _ = _add_uid()
     out: str = f"ok: {ok}\nuid: {uid}"
     return PlainTextResponse(out, status_code=200 if ok else 500)
-
 
 
 @app.get("/test_headers", tags=["test"])
@@ -225,7 +240,6 @@ def test_download_video() -> FileResponse:
     """Test the download."""
     file = os.path.join(UPLOAD_DIR, "video.mp4")
     return FileResponse(file, media_type="video/mp4", filename="video.mp4")
-
 
 
 @app.get("/test/download/meta", tags=["test"])
