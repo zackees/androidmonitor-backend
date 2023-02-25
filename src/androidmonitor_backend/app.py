@@ -97,6 +97,7 @@ def app_description() -> str:
         lines.append("  * Running in `TEST` mode")
         lines.append("    * x-api-admin-key: *TEST MODE - NO AUTHENTICATION*")
         lines.append("    * DB_URL: " + f"`{DB_URL}`")
+        lines.append(f"    * URL: `{URL}`")
         lines.append("    * ALLOW_DB_CLEAR: " + f"`{ALLOW_DB_CLEAR}`")
         lines.append("    * CLIENT_API_KEYS:")
         for client_key in CLIENT_API_KEYS:
