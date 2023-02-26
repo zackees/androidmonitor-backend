@@ -9,6 +9,7 @@ from hmac import compare_digest
 from tempfile import TemporaryDirectory
 
 import uvicorn  # type: ignore
+from fastapi.templating import Jinja2Templates
 from colorama import just_fix_windows_console
 from fastapi import FastAPI, File, Header, UploadFile  # type: ignore
 from fastapi.middleware.cors import CORSMiddleware
@@ -42,6 +43,7 @@ from androidmonitor_backend.settings import (
     UPLOAD_DIR,
     URL,
     VIDEO_UPLOAD_DIR,
+    TEMPLATES_DIR
 )
 from androidmonitor_backend.util import async_download
 from androidmonitor_backend.version import VERSION
@@ -74,6 +76,7 @@ tags_metadata = [
     },
 ]
 
+templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
 def get_form() -> str:
     """Get form"""
