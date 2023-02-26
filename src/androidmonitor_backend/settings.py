@@ -45,6 +45,7 @@ CLIENT_TEST_TOKEN = "f2f4b921b3593220488fc099f39295e06f6d2cf67cd886853e423ca2900
 VIDEO_UPLOAD_DIR = os.path.join(DATA_UPLOAD_DIR, "video")
 META_UPLOAD_DIR = os.path.join(DATA_UPLOAD_DIR, "meta")
 DOWNLOAD_DIR = os.path.join(HERE, "download")
+WWW_DIR = os.path.join(HERE, "www")
 DOWNLOAD_APK_FILE = os.path.join(DOWNLOAD_DIR, "app-release.apk")
 os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(DATA_UPLOAD_DIR, exist_ok=True)

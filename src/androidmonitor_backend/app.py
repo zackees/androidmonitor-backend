@@ -158,6 +158,12 @@ app.mount(
     name="download",
 )
 
+app.mount(
+    "/www",
+    StaticFiles(directory=DOWNLOAD_DIR, html=True, check_dir=True),
+    name="www",
+)
+
 
 @app.get("/apk", tags=["client"])
 async def apk() -> FileResponse:
