@@ -2,20 +2,13 @@
 Database.
 """
 
+import random
 import secrets
 from datetime import datetime, timedelta
 from typing import Any, Sequence
 
-from sqlalchemy import (
-    Column,
-    DateTime,
-    Integer,
-    MetaData,
-    Row,
-    String,
-    Table,
-    create_engine,
-)
+from sqlalchemy import Row  # pylint: disable=no-name-in-module
+from sqlalchemy import Column, DateTime, Integer, MetaData, String, Table, create_engine
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 
@@ -111,6 +104,32 @@ def db_insert_uid(uid: str, created: datetime) -> None:
             if "UNIQUE constraint failed" in str(error):
                 raise DuplicateError from error
             raise
+
+
+def db_add_uid() -> tuple[bool, str, str]:
+    """Adds a randomly generated UID to the database."""
+    while True:
+        # generate a random 8 digit number
+        random_value = random.randint(0, 99999999)
+        rand_str = str(random_value).zfill(8)
+        # sum all digits and add the last digit as the checksum
+        total = 0
+        for char in rand_str:
+            total += int(char)
+        total = total % 10
+        rand_str += str(total)
+        # insert a - in the middle
+        out_rand_str = rand_str[:3] + "-" + rand_str[3:6] + "-" + rand_str[6:]
+        now = datetime.utcnow()
+        # add it to the database
+        try:
+            db_insert_uid(rand_str, datetime.utcnow())
+            log.info("Added uid %s", rand_str)
+            # does the value already exist
+            break
+        except DuplicateError:
+            continue
+    return True, out_rand_str, str(now)
 
 
 def db_try_register(uid: str) -> tuple[bool, str]:

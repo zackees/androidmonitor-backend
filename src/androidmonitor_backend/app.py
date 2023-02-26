@@ -3,14 +3,12 @@
 """
 
 import os
-import random
 from datetime import datetime
 from hmac import compare_digest
 from tempfile import TemporaryDirectory
 
 import uvicorn  # type: ignore
-from fastapi.templating import Jinja2Templates
-from colorama import just_fix_windows_console
+from colorama import just_fix_windows_console  # pylint: disable=no-name-in-module
 from fastapi import FastAPI, File, Header, UploadFile  # type: ignore
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import (
@@ -20,12 +18,12 @@ from fastapi.responses import (
     RedirectResponse,
 )
 from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 
 from androidmonitor_backend.db import (
-    DuplicateError,
+    db_add_uid,
     db_clear,
     db_get_recent,
-    db_insert_uid,
     db_is_token_valid,
     db_try_register,
 )
@@ -40,10 +38,10 @@ from androidmonitor_backend.settings import (
     DOWNLOAD_DIR,
     IS_TEST,
     META_UPLOAD_DIR,
+    TEMPLATES_DIR,
     UPLOAD_DIR,
     URL,
     VIDEO_UPLOAD_DIR,
-    TEMPLATES_DIR
 )
 from androidmonitor_backend.util import async_download
 from androidmonitor_backend.version import VERSION
@@ -77,6 +75,7 @@ tags_metadata = [
 ]
 
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
+
 
 def get_form() -> str:
     """Get form"""
@@ -193,37 +192,12 @@ async def info() -> PlainTextResponse:
     return PlainTextResponse("\n".join(lines))
 
 
-def _add_uid() -> tuple[bool, str, str]:
-    while True:
-        # generate a random 8 digit number
-        random_value = random.randint(0, 99999999)
-        rand_str = str(random_value).zfill(8)
-        # sum all digits and add the last digit as the checksum
-        total = 0
-        for char in rand_str:
-            total += int(char)
-        total = total % 10
-        rand_str += str(total)
-        # insert a - in the middle
-        out_rand_str = rand_str[:3] + "-" + rand_str[3:6] + "-" + rand_str[6:]
-        now = datetime.utcnow()
-        # add it to the database
-        try:
-            db_insert_uid(rand_str, datetime.utcnow())
-            log.info("Added uid %s", rand_str)
-            # does the value already exist
-            break
-        except DuplicateError:
-            continue
-    return True, out_rand_str, str(now)
-
-
 @app.get("/v1/add_uid", tags=["admin"])
 def add_uid(x_api_admin_key: str = ApiKeyHeader) -> JSONResponse:
     """TODO - Add description."""
     if not is_authenticated(x_api_admin_key):
         return JSONResponse({"error": "Invalid API key"}, status_code=401)
-    ok, uid, created = _add_uid()
+    ok, uid, created = db_add_uid()
     return JSONResponse({"ok": ok, "uid": uid, "created": created})
 
 
@@ -232,7 +206,7 @@ def add_uid_plaintext(x_api_admin_key: str = ApiKeyHeader) -> PlainTextResponse:
     """Returns the uid in plaintext."""
     if not is_authenticated(x_api_admin_key):
         return PlainTextResponse('"error": "Invalid API key"', status_code=401)
-    ok, uid, _ = _add_uid()
+    ok, uid, _ = db_add_uid()
     out: str = f"ok: {ok}\nuid: {uid}"
     return PlainTextResponse(out, status_code=200 if ok else 500)
 
