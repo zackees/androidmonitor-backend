@@ -211,14 +211,6 @@ def add_uid_plaintext(x_api_admin_key: str = ApiKeyHeader) -> PlainTextResponse:
     return PlainTextResponse(out, status_code=200 if ok else 500)
 
 
-@app.get("/test_headers", tags=["test"])
-def test_headers(
-    x_data: str = Header(...),
-) -> PlainTextResponse:
-    """Test the headers."""
-    return PlainTextResponse(f"data: {x_data}")
-
-
 @app.get("/test/download/video", tags=["test"])
 def test_download_video() -> FileResponse:
     """Test the download."""
@@ -284,12 +276,12 @@ async def upload(
     return PlainTextResponse(f"Uploaded {metadata.filename} and {vidfile.filename}")
 
 
-@app.post("/test_upload", tags=["test"])
+@app.post("/test/upload", tags=["test"])
 async def test_upload(
     datafile: UploadFile = File(...),
 ) -> PlainTextResponse:
     """TODO - Add description."""
-    log.info("/test_upload with file: %s", datafile.filename)
+    log.info("/test/upload with file: %s", datafile.filename)
     if datafile.filename is None:
         return PlainTextResponse("invalid filename", status_code=400)
     with TemporaryDirectory() as temp_dir:
