@@ -43,7 +43,7 @@ from androidmonitor_backend.settings import (
     URL,
     VIDEO_UPLOAD_DIR,
 )
-from androidmonitor_backend.util import async_download
+from androidmonitor_backend.util import async_download, check_video
 from androidmonitor_backend.version import VERSION
 
 just_fix_windows_console()
@@ -273,6 +273,8 @@ async def upload(
         await async_download(file, temp_path)
         await file.close()
         log.info("Uploaded file %s to %s", file.filename, temp_path)
+        if file == vidfile:
+            check_video(temp_path, log)
     return PlainTextResponse(f"Uploaded {metadata.filename} and {vidfile.filename}")
 
 

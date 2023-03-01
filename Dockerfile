@@ -6,6 +6,7 @@ ENV LANG=C.UTF-8
 RUN apt-get update && apt-get install -y --force-yes --no-install-recommends \
     apt-transport-https \
     ca-certificates \
+    ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 RUN pip install --no-cache-dir --upgrade pip
