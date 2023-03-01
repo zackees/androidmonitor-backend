@@ -257,6 +257,7 @@ async def upload(
     if is_client_test:
         # this is the test client
         log.info("Test client upload called")
+        return PlainTextResponse("Test client upload called")
     elif not db_is_token_valid(x_client_token):
         return PlainTextResponse("Invalid client registration", status_code=401)
     if vidfile.filename is None:
