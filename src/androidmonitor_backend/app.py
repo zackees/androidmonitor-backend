@@ -333,14 +333,12 @@ def getlog(x_api_admin_key: str = ApiKeyHeader) -> PlainTextResponse:
 if ALLOW_DB_CLEAR:
     # clear database
     @app.delete("/clear", tags=["admin"])
-    async def clear(
-        delete=False, x_api_admin_key: str = ApiKeyHeader
-    ) -> PlainTextResponse:
+    async def clear(x_api_admin_key: str = ApiKeyHeader) -> PlainTextResponse:
         """TODO - Add description."""
         if not is_authenticated(x_api_admin_key):
             return PlainTextResponse("Invalid API key", status_code=401)
         log.critical("Clear called")
-        db_clear(delete)
+        db_clear()
         return PlainTextResponse("Deleted all data")
 
 

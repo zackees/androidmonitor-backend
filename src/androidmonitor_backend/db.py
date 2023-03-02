@@ -8,15 +8,7 @@ from datetime import datetime, timedelta
 from typing import Any, Sequence
 
 # from sqlalchemy import Row  # pylint: disable=no-name-in-module
-from sqlalchemy import (
-    Column,
-    DateTime,
-    Integer,
-    MetaData,
-    String,
-    Table,
-    create_engine,
-)
+from sqlalchemy import Column, DateTime, Integer, MetaData, String, Table, create_engine
 from sqlalchemy.engine.row import Row
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import backref, relationship, sessionmaker
@@ -87,7 +79,7 @@ def db_register_upload(uid: str, uri_video: str, uri_meta: str) -> None:
             user_uid=uid,
             uri_video=uri_video,
             uri_meta=uri_meta,
-            created=datetime.utcnow()
+            created=datetime.utcnow(),
         )
         session.execute(insert)
         session.commit()
@@ -105,6 +97,7 @@ def db_list_uploads(uid: str, limit: int = 10) -> Sequence[Row[Any]]:
         )
         result = session.execute(select)
         return result.fetchall()
+
 
 def db_uid_exists(uid: str) -> bool:
     """Check if a uid exists."""

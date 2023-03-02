@@ -26,8 +26,8 @@ from androidmonitor_backend.db import (
     db_is_client_registered,
     db_list_uploads,
     db_register_upload,
-    db_try_register,
     db_to_string,
+    db_try_register,
 )
 
 
@@ -78,7 +78,9 @@ class DbTester(unittest.TestCase):
         """Tests that a uid can be expired"""
         db_clear()
         db_insert_uid("0000", datetime.utcnow())
-        db_register_upload(uid="0000", uri_video="/tmp/vid.mp4", uri_meta='/tmp/meta.json')
+        db_register_upload(
+            uid="0000", uri_video="/tmp/vid.mp4", uri_meta="/tmp/meta.json"
+        )
         db_str = db_to_string()
         print(db_str)
         vids = db_list_uploads("0000")
