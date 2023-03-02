@@ -39,4 +39,3 @@ def check_video(path: str, log: Any) -> None:
         log.error("Invalid video file: %s", path)
         log.error("Output: %s", exc.stdout)
         log.error("Error: %s", exc.stderr)
-        raise
