@@ -2,6 +2,9 @@
     app worker
 """
 
+# pylint: disable=redefined-builtin
+
+import json
 import os
 from datetime import datetime
 from hmac import compare_digest
@@ -27,6 +30,7 @@ from androidmonitor_backend.db import (
     db_get_recent_videos,
     db_get_uploads,
     db_get_user_from_token,
+    db_get_video,
     db_is_token_valid,
     db_register_upload,
     db_try_register,
@@ -358,6 +362,30 @@ def list_uid_uploads(uid: str, x_api_admin_key: str = ApiKeyHeader) -> JSONRespo
         }
         out.append(item)
     return JSONResponse(out)
+
+
+@app.get("/v1/download/{id}/video", tags=["admin"])
+def download_video(id: int, x_api_admin_key: str = ApiKeyHeader) -> FileResponse:
+    """Download video file via id"""
+    if not is_authenticated(x_api_admin_key):
+        return FileResponse("", status_code=401)
+    vid_info: VideoItem | None = db_get_video(id)
+    if vid_info is None:
+        return FileResponse("", status_code=404)
+    return FileResponse(vid_info.uri_video, media_type="video/mp4")
+
+
+@app.get("/v1/download/{id}/meta", tags=["admin"])
+def download_meta(id: int, x_api_admin_key: str = ApiKeyHeader) -> JSONResponse:
+    """Download meta file via id"""
+    if not is_authenticated(x_api_admin_key):
+        return JSONResponse({"error": "Invalid API key"}, status_code=401)
+    vid_info: VideoItem | None = db_get_video(id)
+    if vid_info is None:
+        return JSONResponse({"error": "Invalid id"}, status_code=404)
+    with open(vid_info.uri_meta, encoding="utf-8", mode="r") as meta_file:
+        meta_json = json.load(meta_file)
+    return JSONResponse(meta_json)
 
 
 # get the log file

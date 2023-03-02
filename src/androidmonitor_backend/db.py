@@ -2,6 +2,8 @@
 Database.
 """
 
+# pylint: disable=redefined-builtin
+
 import random
 import secrets
 from dataclasses import dataclass
@@ -157,6 +159,29 @@ class VideoItem:
     uri_video: str
     uri_meta: str
     created: datetime
+
+
+def db_get_video(id: int) -> VideoItem | None:
+    """Get the uids."""
+    db_init_once()
+    with Session() as session:
+        select = vid_table.select().where(vid_table.c.id == id)
+        result = session.execute(select)
+        rows = result.fetchall()
+        if len(rows) == 0:
+            return None
+        row = rows[0]
+        try:
+            return VideoItem(
+                id=row.id,
+                uid=row.user_uid,
+                uri_video=row.uri_video,
+                uri_meta=row.uri_meta,
+                created=row.created,
+            )
+        except Exception as exc:  # pylint: disable=broad-except
+            log.exception(exc)
+            return None
 
 
 def db_get_recent_videos(limit=10) -> list[VideoItem]:
