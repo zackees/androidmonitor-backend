@@ -24,7 +24,10 @@ from androidmonitor_backend.db import (
     db_get_uid,
     db_insert_uid,
     db_is_client_registered,
+    db_list_uploads,
+    db_register_upload,
     db_try_register,
+    db_to_string,
 )
 
 
@@ -35,7 +38,7 @@ class DbTester(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         """Clears the database."""
-        db_clear(True)
+        db_clear()
 
     def test_insert_uid(self) -> None:
         """Example tester."""
@@ -70,6 +73,20 @@ class DbTester(unittest.TestCase):
         db_expire_old_uids(max_time_seconds=-99999)
         val = db_get_uid("test3")
         self.assertIsNone(val)
+
+    def test_register_upload(self) -> None:
+        """Tests that a uid can be expired"""
+        db_clear()
+        db_insert_uid("0000", datetime.utcnow())
+        db_register_upload(uid="0000", uri_video="/tmp/vid.mp4", uri_meta='/tmp/meta.json')
+        db_str = db_to_string()
+        print(db_str)
+        vids = db_list_uploads("0000")
+        self.assertEqual(len(vids), 1, f"Expected 1 video, got {len(vids)}, {db_str}")
+        vid = vids[0]
+        self.assertEqual(vid.user_uid, "0000")
+        self.assertEqual(vid.uri_video, "/tmp/vid.mp4")
+        self.assertEqual(vid.uri_meta, "/tmp/meta.json")
 
 
 if __name__ == "__main__":

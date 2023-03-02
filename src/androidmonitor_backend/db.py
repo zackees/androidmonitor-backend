@@ -7,10 +7,19 @@ import secrets
 from datetime import datetime, timedelta
 from typing import Any, Sequence
 
-from sqlalchemy import Row  # pylint: disable=no-name-in-module
-from sqlalchemy import Column, DateTime, Integer, MetaData, String, Table, create_engine
+# from sqlalchemy import Row  # pylint: disable=no-name-in-module
+from sqlalchemy import (
+    Column,
+    DateTime,
+    Integer,
+    MetaData,
+    String,
+    Table,
+    create_engine,
+)
+from sqlalchemy.engine.row import Row
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import backref, relationship, sessionmaker
 
 from androidmonitor_backend.log import make_logger
 from androidmonitor_backend.settings import DB_URL, IS_TEST
@@ -26,14 +35,33 @@ log = make_logger(__name__)
 
 engine = create_engine(DB_URL)
 meta = MetaData()
-uid_table = Table(
-    "uid",
+user_table = Table(
+    "user",
     meta,
-    Column("id", Integer, primary_key=True),
-    Column("uid", String, unique=True),
+    Column("uid", String, primary_key=True),
     Column("created", DateTime, index=True),
     Column("token", String, index=True),
+    Column("version", String, default="0.1"),  # beta, pre-release.
 )
+vid_table = Table(
+    "videos",
+    meta,
+    # Foreign key to uid_table
+    Column("id", Integer, primary_key=True),
+    Column("user_uid", String),
+    Column("uri_video", String),
+    Column("uri_meta", String),
+    Column("created", DateTime, index=True),
+)
+
+# Define a relationship between the user and videos tables
+videos_relationship = relationship(
+    "video_relationship",
+    backref=backref("user", uselist=False),
+    primaryjoin=user_table.c.uid == vid_table.c.user_uid,
+)
+
+
 Session = sessionmaker(bind=engine)
 
 
@@ -46,12 +74,44 @@ def db_init_once() -> None:
     data["init"] = True
 
 
+def db_register_upload(uid: str, uri_video: str, uri_meta: str) -> None:
+    """Register a video upload."""
+    db_init_once()
+    with Session() as session:
+        select = user_table.select().where(user_table.c.uid == uid)
+        result = session.execute(select)
+        rows = result.fetchall()
+        if len(rows) == 0:
+            raise ValueError("uid not found")
+        insert = vid_table.insert().values(
+            user_uid=uid,
+            uri_video=uri_video,
+            uri_meta=uri_meta,
+            created=datetime.utcnow()
+        )
+        session.execute(insert)
+        session.commit()
+
+
+def db_list_uploads(uid: str, limit: int = 10) -> Sequence[Row[Any]]:
+    """List the uploads."""
+    db_init_once()
+    with Session() as session:
+        select = (
+            vid_table.select()
+            .where(vid_table.c.user_uid == uid)
+            .order_by(vid_table.c.created.desc())
+            .limit(limit)
+        )
+        result = session.execute(select)
+        return result.fetchall()
+
 def db_uid_exists(uid: str) -> bool:
     """Check if a uid exists."""
     db_init_once()
-    with engine.connect() as conn:
-        select = uid_table.select().where(uid_table.c.uid == uid)
-        result = conn.execute(select)
+    with Session() as session:
+        select = user_table.select().where(user_table.c.uid == uid)
+        result = session.execute(select)
         rows = result.fetchall()
         return len(rows) > 0
 
@@ -59,9 +119,9 @@ def db_uid_exists(uid: str) -> bool:
 def db_get_uid(uid: str) -> Row[Any] | None:
     """Get a uid."""
     db_init_once()
-    with engine.connect() as conn:
-        select = uid_table.select().where(uid_table.c.uid == uid)
-        result = conn.execute(select)
+    with Session() as session:
+        select = user_table.select().where(user_table.c.uid == uid)
+        result = session.execute(select)
         rows = result.fetchall()
         if len(rows) == 0:
             return None
@@ -71,25 +131,43 @@ def db_get_uid(uid: str) -> Row[Any] | None:
 def db_get_recent(limit=10) -> Sequence[Row[Any]]:
     """Get the uids."""
     db_init_once()
-    with engine.connect() as conn:
+    with Session() as session:
         select = (
-            uid_table.select().where().order_by(uid_table.c.created.desc()).limit(limit)
+            user_table.select()
+            .where()
+            .order_by(user_table.c.created.desc())
+            .limit(limit)
         )
-        result = conn.execute(select)
+        result = session.execute(select)
         rows = result.fetchall()
         return rows
 
 
-def db_clear(delete=False) -> None:
+def db_clear() -> None:
     """Clear the database."""
     db_init_once()
-    with engine.connect() as conn:
-        if delete:
-            uid_table.drop(engine)
-            meta.create_all(engine)
-        else:
-            conn.execute(uid_table.delete())
-            conn.commit()
+    with engine.connect():
+        user_table.drop(engine)
+        vid_table.drop(engine)
+        meta.create_all(engine)
+
+
+def db_to_string() -> str:
+    """Convert the database to a string."""
+    db_init_once()
+    with Session() as session:
+        select = user_table.select()
+        result = session.execute(select)
+        rows = result.fetchall()
+        out: list[str] = ["user table"]
+        for row in rows:
+            out.append(f"{row.uid} {row.created} {row.token}")
+        select = vid_table.select()
+        result = session.execute(select)
+        rows = result.fetchall()
+        for row in rows:
+            out.append(f"{row.user_uid} {row.uri_video} {row.uri_meta} {row.created}")
+        return "\n".join(out)
 
 
 def db_insert_uid(uid: str, created: datetime) -> None:
@@ -97,7 +175,7 @@ def db_insert_uid(uid: str, created: datetime) -> None:
     db_init_once()
     with Session() as session:
         try:
-            insert = uid_table.insert().values(uid=uid, created=created)
+            insert = user_table.insert().values(uid=uid, created=created)
             session.execute(insert)
             session.commit()
         except IntegrityError as error:
@@ -154,9 +232,9 @@ def db_try_register(uid: str) -> tuple[bool, str]:
         # update the uid if of the token only if the previous token was None
         # flake8: noqa=E711
         update = (
-            uid_table.update()
-            .where(uid_table.c.uid == uid)
-            .where(uid_table.c.token == None)  # type: ignore # pylint: disable=singleton-comparison
+            user_table.update()
+            .where(user_table.c.uid == uid)
+            .where(user_table.c.token == None)  # type: ignore # pylint: disable=singleton-comparison
             .values(token=token128)
         )
         result = session.execute(update)
@@ -171,13 +249,13 @@ def db_try_register(uid: str) -> tuple[bool, str]:
 def db_is_client_registered(token: str, uid: str) -> bool:
     """Returns true if the client with the token is registered."""
     db_init_once()
-    with engine.connect() as conn:
+    with Session() as session:
         select = (
-            uid_table.select()
-            .where(uid_table.c.uid == uid)
-            .where(uid_table.c.token == token)
+            user_table.select()
+            .where(user_table.c.uid == uid)
+            .where(user_table.c.token == token)
         )
-        result = conn.execute(select)
+        result = session.execute(select)
         rows = result.fetchall()
         return len(rows) > 0
 
@@ -185,9 +263,9 @@ def db_is_client_registered(token: str, uid: str) -> bool:
 def db_is_token_valid(token: str) -> bool:
     """Returns true if the token is valid."""
     db_init_once()
-    with engine.connect() as conn:
-        select = uid_table.select().where(uid_table.c.token == token)
-        result = conn.execute(select)
+    with Session() as session:
+        select = user_table.select().where(user_table.c.token == token)
+        result = session.execute(select)
         rows = result.fetchall()
         return len(rows) > 0
 
@@ -200,9 +278,9 @@ def db_expire_old_uids(max_time_seconds: int) -> None:
         # delete old uids where token is null
         # flake8: noqa=E711
         delete = (
-            uid_table.delete()
-            .where(uid_table.c.created < max_age)
-            .where(uid_table.c.token == None)  # type: ignore # pylint: disable=singleton-comparison
+            user_table.delete()
+            .where(user_table.c.created < max_age)
+            .where(user_table.c.token == None)  # type: ignore # pylint: disable=singleton-comparison
         )
         session.execute(delete)
         session.commit()
