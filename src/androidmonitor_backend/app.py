@@ -294,7 +294,7 @@ async def test_upload(
     return PlainTextResponse(f"Uploaded {datafile.filename} to {temp_datapath}")
 
 
-@app.get("/get_uids", tags=["admin"])
+@app.get("/list/uids", tags=["admin"])
 def log_file(
     x_api_admin_key: str = ApiKeyHeader,
 ) -> JSONResponse:
