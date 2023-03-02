@@ -34,8 +34,12 @@ def check_video(path: str, log: Any) -> None:
             check=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
+            universal_newlines=True,
         )
     except subprocess.CalledProcessError as exc:
-        log.error("Invalid video file: %s", path)
-        log.error("Output: %s", exc.stdout)
-        log.error("Error: %s", exc.stderr)
+        err_msg = f"Invalid video file: {path}\n"
+        if exc.stdout:
+            err_msg += exc.stdout + "\n"
+        if exc.stderr:
+            err_msg += exc.stderr + "\n"
+        log.error(err_msg)
