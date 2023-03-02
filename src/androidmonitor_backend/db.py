@@ -152,6 +152,7 @@ def db_get_recent(limit=10) -> Sequence[Row[Any]]:
 class VideoItem:
     """Video item."""
 
+    id: int
     uid: str
     uri_video: str
     uri_meta: str
@@ -171,6 +172,7 @@ def db_get_recent_videos(limit=10) -> list[VideoItem]:
         for row in rows:
             try:
                 vid = VideoItem(
+                    id=row.id,
                     uid=row.user_uid,
                     uri_video=row.uri_video,
                     uri_meta=row.uri_meta,

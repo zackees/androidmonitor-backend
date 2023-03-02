@@ -32,7 +32,9 @@ version = "1.0.0"
 good-names = [
     "c",
     "i",
-    "ok"
+    "ok",
+    "id",
+    "e"
 ]
 
 [tool.mypy]

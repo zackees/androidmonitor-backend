@@ -351,6 +351,7 @@ def list_uid_uploads(uid: str, x_api_admin_key: str = ApiKeyHeader) -> JSONRespo
     out = []
     for row in rows:
         item = {
+            "id": row.id,
             "uri_video": row.uri_video,
             "uri_meta": row.uri_meta,
             "created": row.created.isoformat(),
