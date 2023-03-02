@@ -21,7 +21,7 @@ from androidmonitor_backend.db import (
     db_clear,
     db_expire_old_uids,
     db_get_recent,
-    db_get_uid,
+    db_get_user_from_token,
     db_insert_uid,
     db_is_client_registered,
     db_list_uploads,
@@ -71,7 +71,7 @@ class DbTester(unittest.TestCase):
         """Tests that a uid can be expired"""
         db_insert_uid("test3", datetime.utcnow())
         db_expire_old_uids(max_time_seconds=-99999)
-        val = db_get_uid("test3")
+        val = db_get_user_from_token("test3")
         self.assertIsNone(val)
 
     def test_register_upload(self) -> None:

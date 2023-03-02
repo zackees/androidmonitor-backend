@@ -18,18 +18,22 @@ from fastapi.responses import (
     RedirectResponse,
 )
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
 
 from androidmonitor_backend.db import (
+    VideoItem,
     db_add_uid,
     db_clear,
     db_get_recent,
+    db_get_recent_videos,
+    db_get_uploads,
+    db_get_user_from_token,
     db_is_token_valid,
+    db_register_upload,
     db_try_register,
 )
 from androidmonitor_backend.log import get_log_reversed, make_logger
+from androidmonitor_backend.settings import ALLOW_DB_CLEAR  # UPLOAD_DIR,
 from androidmonitor_backend.settings import (
-    ALLOW_DB_CLEAR,
     API_ADMIN_KEY,
     CLIENT_API_KEYS,
     CLIENT_TEST_TOKEN,
@@ -37,13 +41,10 @@ from androidmonitor_backend.settings import (
     DOWNLOAD_APK_FILE,
     DOWNLOAD_DIR,
     IS_TEST,
-    META_UPLOAD_DIR,
-    TEMPLATES_DIR,
     UPLOAD_DIR,
     URL,
-    VIDEO_UPLOAD_DIR,
 )
-from androidmonitor_backend.util import async_download, check_video
+from androidmonitor_backend.util import async_download  # check_video
 from androidmonitor_backend.version import VERSION
 
 just_fix_windows_console()
@@ -51,9 +52,6 @@ just_fix_windows_console()
 STARTUP_DATETIME = datetime.utcnow()
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-TEST_UPLOAD_VID_DIR = os.path.join(VIDEO_UPLOAD_DIR, "upload_vid")
-TEST_UPLOAD_META_DIR = os.path.join(META_UPLOAD_DIR, "upload_meta")
 
 log = make_logger(__name__)
 
@@ -73,8 +71,6 @@ tags_metadata = [
         "description": "Test api",
     },
 ]
-
-templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
 
 def get_form() -> str:
@@ -213,16 +209,33 @@ def add_uid_plaintext(x_api_admin_key: str = ApiKeyHeader) -> PlainTextResponse:
 
 @app.get("/test/download/video", tags=["test"])
 def test_download_video() -> FileResponse:
-    """Test the download."""
-    file = os.path.join(UPLOAD_DIR, "video.mp4")
-    return FileResponse(file, media_type="video/mp4", filename="video.mp4")
+    """Test the download of videos."""
+    # file = os.path.join(UPLOAD_DIR, "video.mp4")
+    # return FileResponse(file, media_type="video/mp4", filename="video.mp4")
+    # get the latest video
+    recent_videos: list[VideoItem] = db_get_recent_videos(limit=1)
+    if len(recent_videos) == 0:
+        return FileResponse("", status_code=404)
+    video = recent_videos[0]
+    return FileResponse(
+        video.uri_video,
+        media_type="video/mp4",
+        filename="video.mp4",
+    )
 
 
 @app.get("/test/download/meta", tags=["test"])
 def test_download_meta() -> FileResponse:
-    """Test the download."""
-    file = os.path.join(UPLOAD_DIR, "meta.json")
-    return FileResponse(file, media_type="text/plain", filename="meta.json")
+    """Test the download of meta.json."""
+    recent_videos: list[VideoItem] = db_get_recent_videos(limit=1)
+    if len(recent_videos) == 0:
+        return FileResponse("", status_code=404)
+    video = recent_videos[0]
+    return FileResponse(
+        video.uri_meta,
+        media_type="application/json",
+        filename="meta.json",
+    )
 
 
 @app.post("/v1/client_register", tags=["client"])
@@ -232,6 +245,7 @@ def register(
     """Tries to register a device"""
     if not is_authenticated(x_client_api_key):
         return JSONResponse({"error": "Invalid API key"}, status_code=401)
+    x_uid = x_uid.replace("-", "")
     ok, token = db_try_register(x_uid)
     if ok:
         return JSONResponse({"ok": True, "error": None, "token": token})
@@ -244,6 +258,13 @@ def is_client_registered(
 ) -> JSONResponse:
     """Checks if a device is registered."""
     return JSONResponse({"is_registered": db_is_token_valid(x_client_token)})
+
+
+def get_path(uid: str) -> str:
+    """Returns the path to the upload dir for the given uid."""
+    out = os.path.join(UPLOAD_DIR, uid)
+    os.makedirs(out, exist_ok=True)
+    return out
 
 
 @app.post("/v1/upload", tags=["client"])
@@ -263,20 +284,30 @@ async def upload(
     if vidfile.filename is None:
         return PlainTextResponse("invalid filename", status_code=400)
     log.info("Upload called with file: %s", vidfile.filename)
-    for file in [metadata, vidfile]:
-        assert file.filename is not None
-        if file == metadata:
-            log.info("Metadata file: %s", file.filename)
-            temp_path = os.path.join(UPLOAD_DIR, "meta.json")
-        else:
-            log.info("Video file: %s", file.filename)
-            temp_path = os.path.join(UPLOAD_DIR, "video.mp4")
-        await async_download(file, temp_path)
-        await file.close()
-        log.info("Uploaded file %s to %s", file.filename, temp_path)
-        if file == vidfile:
-            check_video(temp_path, log)
-    return PlainTextResponse(f"Uploaded {metadata.filename} and {vidfile.filename}")
+    user = db_get_user_from_token(x_client_token)
+    if user is None:
+        return PlainTextResponse("Invalid client registration", status_code=401)
+    upload_dir = get_path(user.uid)
+    log.info("Upload dir: %s", upload_dir)
+    vidfilename = vidfile.filename
+    vidfile_path = os.path.join(upload_dir, vidfilename)
+    metafile_path = os.path.splitext(vidfile_path)[0] + ".json"
+    try:
+        await async_download(metadata, metafile_path)
+        await metadata.close()
+        log.info("Metafile file: %s", metafile_path)
+        await async_download(vidfile, vidfile_path)
+        await vidfile.close()
+        log.info("Video file: %s", vidfile_path)
+        db_register_upload(uid=user.uid, uri_video=vidfile_path, uri_meta=metafile_path)
+        return PlainTextResponse(f"Uploaded {vidfile_path} and {metafile_path}")
+    except Exception as exc:  # pylint: disable=broad-except
+        log.exception("Error during upload: %s", exc)
+        if os.path.exists(vidfile_path):
+            os.remove(vidfile_path)
+        if os.path.exists(metafile_path):
+            os.remove(metafile_path)
+        return PlainTextResponse(str(exc), status_code=500)
 
 
 @app.post("/test/upload", tags=["test"])
@@ -294,27 +325,37 @@ async def test_upload(
     return PlainTextResponse(f"Uploaded {datafile.filename} to {temp_datapath}")
 
 
-@app.get("/list/uids", tags=["admin"])
+@app.get("/v1/list/uids", tags=["admin"])
 def log_file(
     x_api_admin_key: str = ApiKeyHeader,
 ) -> JSONResponse:
-    """TODO - Add description."""
+    """List all uids"""
     if not is_authenticated(x_api_admin_key):
         return JSONResponse({"error": "Invalid API key"}, status_code=401)
     rows = db_get_recent()
     # convert to json
     out = []
     for row in rows:
-        json_data = row._asdict()
-        for key in json_data:
-            # Make values safe for json and add formatting.
-            value = json_data[key]
-            if key == "uid":
-                value = value[:3] + "-" + value[3:6] + "-" + value[6:]
-                json_data[key] = value
-            elif isinstance(value, datetime):
-                json_data[key] = value.isoformat()
-        out.append(json_data)
+        item = {"uid": row.uid, "created": row.created.isoformat()}
+        out.append(item)
+    return JSONResponse(out)
+
+
+@app.get("/v1/list/{uid}/uploads", tags=["admin"])
+def list_uid_uploads(uid: str, x_api_admin_key: str = ApiKeyHeader) -> JSONResponse:
+    """Get's all uploads from the user with the given uid."""
+    if not is_authenticated(x_api_admin_key):
+        return JSONResponse({"error": "Invalid API key"}, status_code=401)
+    uid = uid.replace("-", "")
+    rows = db_get_uploads(uid)
+    out = []
+    for row in rows:
+        item = {
+            "uri_video": row.uri_video,
+            "uri_meta": row.uri_meta,
+            "created": row.created.isoformat(),
+        }
+        out.append(item)
     return JSONResponse(out)
 
 

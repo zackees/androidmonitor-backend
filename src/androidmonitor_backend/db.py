@@ -4,10 +4,10 @@ Database.
 
 import random
 import secrets
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any, Sequence
 
-# from sqlalchemy import Row  # pylint: disable=no-name-in-module
 from sqlalchemy import Column, DateTime, Integer, MetaData, String, Table, create_engine
 from sqlalchemy.engine.row import Row
 from sqlalchemy.exc import IntegrityError
@@ -109,7 +109,19 @@ def db_uid_exists(uid: str) -> bool:
         return len(rows) > 0
 
 
-def db_get_uid(uid: str) -> Row[Any] | None:
+def db_get_user_from_token(token: str) -> Row[Any] | None:
+    """Get a uid."""
+    db_init_once()
+    with Session() as session:
+        select = user_table.select().where(user_table.c.token == token)
+        result = session.execute(select)
+        rows = result.fetchall()
+        if len(rows) == 0:
+            return None
+        return rows[0]
+
+
+def db_get_user_from_uid(uid: str) -> Row[Any] | None:
     """Get a uid."""
     db_init_once()
     with Session() as session:
@@ -134,6 +146,40 @@ def db_get_recent(limit=10) -> Sequence[Row[Any]]:
         result = session.execute(select)
         rows = result.fetchall()
         return rows
+
+
+@dataclass
+class VideoItem:
+    """Video item."""
+
+    uid: str
+    uri_video: str
+    uri_meta: str
+    created: datetime
+
+
+def db_get_recent_videos(limit=10) -> list[VideoItem]:
+    """Get the uids."""
+    db_init_once()
+    with Session() as session:
+        out: list[VideoItem] = []
+        select = (
+            vid_table.select().where().order_by(vid_table.c.created.desc()).limit(limit)
+        )
+        result = session.execute(select)
+        rows = result.fetchall()
+        for row in rows:
+            try:
+                vid = VideoItem(
+                    uid=row.user_uid,
+                    uri_video=row.uri_video,
+                    uri_meta=row.uri_meta,
+                    created=row.created,
+                )
+                out.append(vid)
+            except Exception as exc:  # pylint: disable=broad-except
+                log.exception(exc)
+        return out
 
 
 def db_clear() -> None:
@@ -209,7 +255,7 @@ def db_try_register(uid: str) -> tuple[bool, str]:
     if IS_TEST:
         # Debugging if the uid is already registered. We don't want this
         # to happen in production because it would be a security issue.
-        row = db_get_uid(uid)
+        row = db_get_user_from_uid(uid)
         recent_rows = db_get_recent()
         print(recent_rows)
         if row is None:
@@ -237,6 +283,20 @@ def db_try_register(uid: str) -> tuple[bool, str]:
             return False, ""
         log.info("uid %s registered", uid)
         return True, token128
+
+
+def db_get_uploads(uid: str) -> Sequence[Row[Any]]:
+    """Get the uids."""
+    db_init_once()
+    with Session() as session:
+        select = (
+            vid_table.select()
+            .where(vid_table.c.user_uid == uid)
+            .order_by(vid_table.c.created.desc())
+        )
+        result = session.execute(select)
+        rows = result.fetchall()
+        return rows
 
 
 def db_is_client_registered(token: str, uid: str) -> bool:
