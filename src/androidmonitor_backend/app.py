@@ -404,23 +404,23 @@ def list_uid_logs(uid: str, x_api_admin_key: str = ApiKeyHeader) -> JSONResponse
     return JSONResponse(out)
 
 
-@app.get("/v1/download/{id}/video", tags=["admin"])
-def download_video(id: int, x_api_admin_key: str = ApiKeyHeader) -> FileResponse:
+@app.get("/v1/download/{vid_id}/video", tags=["admin"])
+def download_video(vid_id: int, x_api_admin_key: str = ApiKeyHeader) -> FileResponse:
     """Download video file via id"""
     if not is_authenticated(x_api_admin_key):
         return FileResponse("", status_code=401)
-    vid_info: VideoItem | None = db_get_video(id)
+    vid_info: VideoItem | None = db_get_video(vid_id)
     if vid_info is None:
         return FileResponse("", status_code=404)
     return FileResponse(vid_info.uri_video, media_type="video/mp4")
 
 
-@app.get("/v1/download/{id}/meta", tags=["admin"])
-def download_meta(id: int, x_api_admin_key: str = ApiKeyHeader) -> JSONResponse:
+@app.get("/v1/download/{vid_id}/meta", tags=["admin"])
+def download_meta(vid_id: int, x_api_admin_key: str = ApiKeyHeader) -> JSONResponse:
     """Download meta file via id"""
     if not is_authenticated(x_api_admin_key):
         return JSONResponse({"error": "Invalid API key"}, status_code=401)
-    vid_info: VideoItem | None = db_get_video(id)
+    vid_info: VideoItem | None = db_get_video(vid_id)
     if vid_info is None:
         return JSONResponse({"error": "Invalid id"}, status_code=404)
     with open(vid_info.uri_meta, encoding="utf-8", mode="r") as meta_file:
@@ -428,12 +428,12 @@ def download_meta(id: int, x_api_admin_key: str = ApiKeyHeader) -> JSONResponse:
     return JSONResponse(meta_json)
 
 
-@app.get("/v1/download/{id}/log", tags=["admin"])
-def download_log(id: int, x_api_admin_key: str = ApiKeyHeader) -> PlainTextResponse:
+@app.get("/v1/download/{log_id}/log", tags=["admin"])
+def download_log(log_id: int, x_api_admin_key: str = ApiKeyHeader) -> PlainTextResponse:
     """Download log file via id"""
     if not is_authenticated(x_api_admin_key):
         return PlainTextResponse("Invalid API key", status_code=401)
-    log_str = db_get_log(id)
+    log_str = db_get_log(log_id)
     if log_str is None:
         return PlainTextResponse("Invalid id", status_code=404)
     return PlainTextResponse(log_str)
