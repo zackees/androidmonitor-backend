@@ -404,7 +404,7 @@ def list_uid_logs(uid: str, x_api_admin_key: str = ApiKeyHeader) -> JSONResponse
     return JSONResponse(out)
 
 
-@app.get("/v1/download/{vid_id}/video", tags=["admin"])
+@app.get("/v1/download/video/{vid_id}", tags=["admin"])
 def download_video(vid_id: int, x_api_admin_key: str = ApiKeyHeader) -> FileResponse:
     """Download video file via id"""
     if not is_authenticated(x_api_admin_key):
@@ -415,7 +415,7 @@ def download_video(vid_id: int, x_api_admin_key: str = ApiKeyHeader) -> FileResp
     return FileResponse(vid_info.uri_video, media_type="video/mp4")
 
 
-@app.get("/v1/download/{vid_id}/meta", tags=["admin"])
+@app.get("/v1/download/meta/{vid_id}", tags=["admin"])
 def download_meta(vid_id: int, x_api_admin_key: str = ApiKeyHeader) -> JSONResponse:
     """Download meta file via id"""
     if not is_authenticated(x_api_admin_key):
@@ -428,7 +428,7 @@ def download_meta(vid_id: int, x_api_admin_key: str = ApiKeyHeader) -> JSONRespo
     return JSONResponse(meta_json)
 
 
-@app.get("/v1/download/{log_id}/log", tags=["admin"])
+@app.get("/v1/download/log/{log_id}", tags=["admin"])
 def download_log(log_id: int, x_api_admin_key: str = ApiKeyHeader) -> PlainTextResponse:
     """Download log file via id"""
     if not is_authenticated(x_api_admin_key):
