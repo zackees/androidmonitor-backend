@@ -24,14 +24,17 @@ from fastapi.staticfiles import StaticFiles
 
 from androidmonitor_backend.db import (
     VideoItem,
+    db_add_log,
     db_add_uid,
     db_clear,
+    db_get_log,
     db_get_recent,
     db_get_recent_videos,
     db_get_uploads,
     db_get_user_from_token,
     db_get_video,
     db_is_token_valid,
+    db_list_logs,
     db_register_upload,
     db_try_register,
 )
@@ -271,6 +274,27 @@ def get_path(uid: str) -> str:
     return out
 
 
+@app.post("/v1/upload/log/{id}", tags=["client"])
+async def upload_log(
+    log_str: str,
+    x_client_token: str = Header(...),
+) -> PlainTextResponse:
+    """TODO - Add description."""
+    is_client_test = compare_digest(x_client_token, CLIENT_TEST_TOKEN)
+    if is_client_test:
+        # this is the test client
+        log.info("Test client upload called")
+        return PlainTextResponse("Test client upload called")
+    if not db_is_token_valid(x_client_token):
+        return PlainTextResponse("Invalid client registration", status_code=401)
+    log.info("Uploading log for %s", x_client_token)
+    user = db_get_user_from_token(x_client_token)
+    if user is None:
+        return PlainTextResponse("Invalid client registration", status_code=401)
+    db_add_log(user.uid, log_str)
+    return PlainTextResponse("ok")
+
+
 @app.post("/v1/upload", tags=["client"])
 async def upload(
     x_client_token: str = Header(...),
@@ -364,6 +388,22 @@ def list_uid_uploads(uid: str, x_api_admin_key: str = ApiKeyHeader) -> JSONRespo
     return JSONResponse(out)
 
 
+@app.get("/v1/list/{uid}/logs", tags=["admin"])
+def list_uid_logs(uid: str, x_api_admin_key: str = ApiKeyHeader) -> JSONResponse:
+    """Lists all the logs gathered from the user with the given uid."""
+    if not is_authenticated(x_api_admin_key):
+        return JSONResponse({"error": "Invalid API key"}, status_code=401)
+    uid = uid.replace("-", "")
+    rows: list[tuple[int, datetime]] = db_list_logs(uid)
+    out = []
+    for row in rows:
+        id = row[0]
+        created = row[1]
+        item = {"id": id, "created": created}
+        out.append(item)
+    return JSONResponse(out)
+
+
 @app.get("/v1/download/{id}/video", tags=["admin"])
 def download_video(id: int, x_api_admin_key: str = ApiKeyHeader) -> FileResponse:
     """Download video file via id"""
@@ -386,6 +426,17 @@ def download_meta(id: int, x_api_admin_key: str = ApiKeyHeader) -> JSONResponse:
     with open(vid_info.uri_meta, encoding="utf-8", mode="r") as meta_file:
         meta_json = json.load(meta_file)
     return JSONResponse(meta_json)
+
+
+@app.get("/v1/download/{id}/log", tags=["admin"])
+def download_log(id: int, x_api_admin_key: str = ApiKeyHeader) -> PlainTextResponse:
+    """Download log file via id"""
+    if not is_authenticated(x_api_admin_key):
+        return PlainTextResponse("Invalid API key", status_code=401)
+    log_str = db_get_log(id)
+    if log_str is None:
+        return PlainTextResponse("Invalid id", status_code=404)
+    return PlainTextResponse(log_str)
 
 
 # get the log file

@@ -18,12 +18,15 @@ os.environ["DB_URL"] = f"sqlite:///{DB_DIR}/db.sqlite3"
 
 from androidmonitor_backend.db import (
     DuplicateError,
+    db_add_log,
     db_clear,
     db_expire_old_uids,
+    db_get_log,
     db_get_recent,
     db_get_user_from_token,
     db_insert_uid,
     db_is_client_registered,
+    db_list_logs,
     db_list_uploads,
     db_register_upload,
     db_to_string,
@@ -89,6 +92,18 @@ class DbTester(unittest.TestCase):
         self.assertEqual(vid.user_uid, "0000")
         self.assertEqual(vid.uri_video, "/tmp/vid.mp4")
         self.assertEqual(vid.uri_meta, "/tmp/meta.json")
+
+    def test_db_logs(self) -> None:
+        """Tests that a log can be added, listed and retrieved."""
+        db_clear()
+        db_insert_uid("0000", datetime.utcnow())
+        db_add_log("0000", "test")
+        log_list: list[tuple[int, datetime]] = db_list_logs("0000")
+        self.assertEqual(len(log_list), 1)
+        log_id = log_list[0][0]
+        self.assertEqual(1, log_id)
+        log_str, _ = db_get_log(log_id)
+        self.assertEqual("test", log_str)
 
 
 if __name__ == "__main__":

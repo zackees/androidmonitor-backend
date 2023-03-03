@@ -47,12 +47,28 @@ vid_table = Table(
     Column("uri_meta", String),
     Column("created", DateTime, index=True),
 )
+logs_table = Table(
+    "logs",
+    meta,
+    # Foreign key to uid_table
+    Column("id", Integer, primary_key=True),
+    Column("user_uid", String),
+    Column("log", String),
+    Column("created", DateTime, index=True),
+)
 
 # Define a relationship between the user and videos tables
 videos_relationship = relationship(
     "video_relationship",
     backref=backref("user", uselist=False),
     primaryjoin=user_table.c.uid == vid_table.c.user_uid,
+)
+
+# Define a relationship between the user and logs tables
+logs_relationship = relationship(
+    "log_relationship",
+    backref=backref("user", uselist=False),
+    primaryjoin=user_table.c.uid == logs_table.c.user_uid,
 )
 
 
@@ -66,6 +82,53 @@ def db_init_once() -> None:
         return
     meta.create_all(engine)
     data["init"] = True
+
+
+def db_add_log(uid: str, log_str: str) -> None:
+    """Add a log."""
+    db_init_once()
+    with Session() as session:
+        insert = logs_table.insert().values(
+            user_uid=uid,
+            log=log_str,
+            created=datetime.utcnow(),
+        )
+        session.execute(insert)
+        session.commit()
+
+
+def db_list_logs(uid: str, limit: int = 10) -> list[tuple[int, datetime]]:
+    """List the logs."""
+    db_init_once()
+    out: list[tuple[int, datetime]] = []
+    with Session() as session:
+        select = (
+            logs_table.select()
+            .where(logs_table.c.user_uid == uid)
+            .order_by(logs_table.c.created.desc())
+            .limit(limit)
+        )
+        result = session.execute(select)
+        for row in result.fetchall():
+            id = row.id  # type: ignore
+            created = row.created
+            out.append((id, created))
+    return out
+
+
+def db_get_log(log_id: int) -> tuple[str, datetime]:
+    """Get a log."""
+    db_init_once()
+    with Session() as session:
+        select = logs_table.select().where(logs_table.c.id == log_id)
+        result = session.execute(select)
+        rows = result.fetchall()
+        if len(rows) == 0:
+            raise ValueError("log_id not found")
+        log_str: str = rows[0].log
+        created: datetime = rows[0].created
+        out: tuple[str, datetime] = (log_str, created)
+        return out
 
 
 def db_register_upload(uid: str, uri_video: str, uri_meta: str) -> None:
