@@ -369,7 +369,7 @@ def log_file(
     return JSONResponse(out)
 
 
-@app.get("/v1/list/{uid}/uploads", tags=["admin"])
+@app.get("/v1/list/uploads/{uid}", tags=["admin"])
 def list_uid_uploads(uid: str, x_api_admin_key: str = ApiKeyHeader) -> JSONResponse:
     """Get's all uploads from the user with the given uid."""
     if not is_authenticated(x_api_admin_key):
@@ -388,7 +388,7 @@ def list_uid_uploads(uid: str, x_api_admin_key: str = ApiKeyHeader) -> JSONRespo
     return JSONResponse(out)
 
 
-@app.get("/v1/list/{uid}/logs", tags=["admin"])
+@app.get("/v1/list/logs/{uid}", tags=["admin"])
 def list_uid_logs(uid: str, x_api_admin_key: str = ApiKeyHeader) -> JSONResponse:
     """Lists all the logs gathered from the user with the given uid."""
     if not is_authenticated(x_api_admin_key):
