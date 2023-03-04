@@ -288,7 +288,7 @@ def get_path(uid: str) -> str:
 
 @app.post("/v1/upload/log", tags=["client"])
 async def upload_log(
-    log_str: str,
+    log_str: str = Form(),
     x_client_token: str = Header(...),
 ) -> PlainTextResponse:
     """TODO - Add description."""
