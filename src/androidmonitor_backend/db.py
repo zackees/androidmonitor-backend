@@ -269,7 +269,25 @@ def db_get_recent_videos(limit=10) -> list[VideoItem]:
                 out.append(vid)
             except Exception as exc:  # pylint: disable=broad-except
                 log.exception(exc)
-        return out
+    return out
+
+
+def db_get_recent_logs_ids(limit=10) -> list[int]:
+    """Get the recent logs ids."""
+    db_init_once()
+    with Session() as session:
+        out: list[int] = []
+        select = (
+            logs_table.select()
+            .where()
+            .order_by(logs_table.c.created.desc())
+            .limit(limit)
+        )
+        result = session.execute(select)
+        rows = result.fetchall()
+        for row in rows:
+            out.append(row.id)
+    return out
 
 
 def db_clear() -> None:

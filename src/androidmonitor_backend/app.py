@@ -29,6 +29,7 @@ from androidmonitor_backend.db import (
     db_clear,
     db_get_log,
     db_get_recent,
+    db_get_recent_logs_ids,
     db_get_recent_videos,
     db_get_uploads,
     db_get_user_from_token,
@@ -243,6 +244,17 @@ def test_download_meta() -> FileResponse:
         media_type="application/json",
         filename="meta.json",
     )
+
+
+@app.get("/test/download/log", tags=["test"])
+def test_download_log() -> PlainTextResponse:
+    """Test the download of log.txt."""
+    log_ids: list[int] = db_get_recent_logs_ids(limit=1)
+    if len(log_ids) == 0:
+        return PlainTextResponse("no recent logs", status_code=404)
+    log_id = log_ids[0]
+    log_text = db_get_log(log_id)
+    return PlainTextResponse(log_text)
 
 
 @app.post("/v1/client_register", tags=["client"])
