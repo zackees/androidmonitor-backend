@@ -34,7 +34,8 @@ good-names = [
     "i",
     "ok",
     "id",
-    "e"
+    "e",
+    "f"
 ]
 
 [tool.mypy]

@@ -10,8 +10,8 @@ from datetime import datetime
 from hmac import compare_digest
 from tempfile import TemporaryDirectory
 
-import uvicorn  # type: ignore
 import colorama  # pylint: disable=no-name-in-module
+import uvicorn  # type: ignore
 from fastapi import FastAPI, File, Form, Header, UploadFile  # type: ignore
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import (
@@ -233,17 +233,15 @@ def test_download_video() -> FileResponse:
 
 
 @app.get("/test/download/meta", tags=["test"])
-def test_download_meta() -> FileResponse:
+def test_download_meta() -> PlainTextResponse:
     """Test the download of meta.json."""
     recent_videos: list[VideoItem] = db_get_recent_videos(limit=1)
     if len(recent_videos) == 0:
-        return FileResponse("", status_code=404)
+        return PlainTextResponse("", status_code=404)
     video = recent_videos[0]
-    return FileResponse(
-        video.uri_meta,
-        media_type="application/json",
-        filename="meta.json",
-    )
+    with open(video.uri_meta, encoding="utf-8", mode="r") as f:
+        out = f.read()
+    return PlainTextResponse(out, media_type="application/json")
 
 
 @app.get("/test/download/log", tags=["test"])
