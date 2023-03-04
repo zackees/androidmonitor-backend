@@ -11,7 +11,7 @@ from hmac import compare_digest
 from tempfile import TemporaryDirectory
 
 import uvicorn  # type: ignore
-from colorama import just_fix_windows_console  # pylint: disable=no-name-in-module
+import colorama  # pylint: disable=no-name-in-module
 from fastapi import FastAPI, File, Form, Header, UploadFile  # type: ignore
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import (
@@ -55,7 +55,7 @@ from androidmonitor_backend.settings import (
 from androidmonitor_backend.util import async_download  # check_video
 from androidmonitor_backend.version import VERSION
 
-just_fix_windows_console()
+colorama.init()
 
 STARTUP_DATETIME = datetime.utcnow()
 
@@ -253,7 +253,7 @@ def test_download_log() -> PlainTextResponse:
     if len(log_ids) == 0:
         return PlainTextResponse("no recent logs", status_code=404)
     log_id = log_ids[0]
-    log_text = db_get_log(log_id)
+    log_text, _ = db_get_log(log_id)
     return PlainTextResponse(log_text)
 
 
