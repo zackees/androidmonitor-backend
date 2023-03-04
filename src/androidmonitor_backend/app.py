@@ -365,6 +365,13 @@ async def test_upload(
     return PlainTextResponse(f"Uploaded {datafile.filename} to {temp_datapath}")
 
 
+@app.post("/test/post", tags=["test"])
+async def test_post(data: str) -> PlainTextResponse:
+    """TODO - Add description."""
+    log.info("/test/post called with data: %s", data)
+    return PlainTextResponse(f"Received {data}")
+
+
 @app.get("/v1/list/uids", tags=["admin"])
 def log_file(
     x_api_admin_key: str = ApiKeyHeader,
