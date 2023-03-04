@@ -274,7 +274,7 @@ def get_path(uid: str) -> str:
     return out
 
 
-@app.post("/v1/upload/log/{id}", tags=["client"])
+@app.post("/v1/upload/log", tags=["client"])
 async def upload_log(
     log_str: str,
     x_client_token: str = Header(...),
