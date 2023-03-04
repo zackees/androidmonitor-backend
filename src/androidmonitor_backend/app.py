@@ -12,7 +12,7 @@ from tempfile import TemporaryDirectory
 
 import uvicorn  # type: ignore
 from colorama import just_fix_windows_console  # pylint: disable=no-name-in-module
-from fastapi import FastAPI, File, Header, UploadFile, Form  # type: ignore
+from fastapi import FastAPI, File, Form, Header, UploadFile  # type: ignore
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import (
     FileResponse,
@@ -363,13 +363,6 @@ async def test_upload(
         await async_download(datafile, temp_datapath)
         log.info("Download test file %s to %s", datafile.filename, temp_datapath)
     return PlainTextResponse(f"Uploaded {datafile.filename} to {temp_datapath}")
-
-
-@app.post("/test/post", tags=["test"])
-async def test_post(data: str = Form()) -> PlainTextResponse:
-    """TODO - Add description."""
-    log.info("/test/post with data: %s", data)
-    return PlainTextResponse(f"Received {data}")
 
 
 @app.get("/v1/list/uids", tags=["admin"])
