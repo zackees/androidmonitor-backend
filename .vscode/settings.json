@@ -16,5 +16,6 @@
     ],
     "python.analysis.extraPaths": [
         "."
-    ]
+    ],
+    "cmake.configureOnOpen": false
 }
