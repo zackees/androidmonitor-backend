@@ -75,6 +75,17 @@ logs_relationship = relationship(
 Session = sessionmaker(bind=engine)
 
 
+@dataclass
+class VideoItem:
+    """Video item."""
+
+    id: int
+    uid: str
+    uri_video: str
+    uri_meta: str
+    created: datetime
+
+
 def db_init_once() -> None:
     """Initialize the database."""
     data = db_init_once.__dict__
@@ -211,17 +222,6 @@ def db_get_recent(limit=10) -> Sequence[Row[Any]]:
         result = session.execute(select)
         rows = result.fetchall()
         return rows
-
-
-@dataclass
-class VideoItem:
-    """Video item."""
-
-    id: int
-    uid: str
-    uri_video: str
-    uri_meta: str
-    created: datetime
 
 
 def db_get_video(id: int) -> VideoItem | None:

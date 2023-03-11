@@ -247,10 +247,12 @@ def test_download_videos(limit: int = 5) -> FileResponse:
         suffix=".zip", delete=False
     )
     zfile.close()
-    with ZipFile(zfile.name, "w") as zip_ojb:
+    with ZipFile(zfile.name, "w") as zip_obj:
         for i, video in enumerate(recent_videos):
-            vidname = f"video_{i}.mp4"
-            zip_ojb.write(video.uri_video, arcname=vidname)
+            vidname = f"video{i}.mp4"
+            metaname = f"meta{i}.json"
+            zip_obj.write(video.uri_video, arcname=vidname)
+            zip_obj.write(video.uri_meta, arcname=metaname)
     assert os.path.exists(zfile.name)
     bg_tasks = BackgroundTasks()
     bg_tasks.add_task(lambda: os.remove(zfile.name))
