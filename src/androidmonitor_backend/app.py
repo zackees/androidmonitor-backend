@@ -8,11 +8,13 @@ import json
 import os
 from datetime import datetime
 from hmac import compare_digest
-from tempfile import TemporaryDirectory
+from tempfile import NamedTemporaryFile, TemporaryDirectory
+from zipfile import ZipFile
 
 import colorama  # pylint: disable=no-name-in-module
 import uvicorn  # type: ignore
-from fastapi import FastAPI, File, Form, Header, UploadFile  # type: ignore
+from fastapi import Form  # type: ignore
+from fastapi import BackgroundTasks, FastAPI, File, Header, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import (
     FileResponse,
@@ -229,6 +231,34 @@ def test_download_video() -> FileResponse:
         video.uri_video,
         media_type="video/mp4",
         filename="video.mp4",
+    )
+
+
+@app.get("/test/download/videos", tags=["test"])
+def test_download_videos(limit: int = 5) -> FileResponse:
+    """Test the download of videos."""
+    # file = os.path.join(UPLOAD_DIR, "video.mp4")
+    # return FileResponse(file, media_type="video/mp4", filename="video.mp4")
+    # get the latest video
+    recent_videos: list[VideoItem] = db_get_recent_videos(limit=limit)
+    if len(recent_videos) == 0:
+        return FileResponse("", status_code=404)
+    zfile = NamedTemporaryFile(  # pylint: disable=consider-using-with
+        suffix=".zip", delete=False
+    )
+    zfile.close()
+    with ZipFile(zfile.name, "w") as zip_ojb:
+        for i, video in enumerate(recent_videos):
+            vidname = f"video_{i}.mp4"
+            zip_ojb.write(video.uri_video, arcname=vidname)
+    assert os.path.exists(zfile.name)
+    bg_tasks = BackgroundTasks()
+    bg_tasks.add_task(lambda: os.remove(zfile.name))
+    return FileResponse(
+        zfile.name,
+        media_type="application/zip",
+        filename="videos.zip",
+        background=bg_tasks,
     )
 
 
