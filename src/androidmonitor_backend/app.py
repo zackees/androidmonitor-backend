@@ -182,17 +182,17 @@ async def apk() -> FileResponse:
 def apk_update() -> JSONResponse:
     """Get the apk."""
     # Get apk info output-metadata.json
-    output_metadata = os.path.join(os.path.dirname(APK_UPDATE_FILE), "outout-metadata.json")
+    output_metadata = os.path.join(os.path.dirname(APK_UPDATE_FILE), "output-metadata.json")
     with open(output_metadata, encoding="utf-8", mode="r") as f:
         meta_json: dict = json.loads(f.read())
     with open(APK_UPDATE_FILE, encoding="utf-8", mode="r") as f:
         apk_update_json: dict = json.loads(f.read())
     apk_update_json["url"] = f"{URL}/apk"
     try:
-        apk_update_json["version"] = meta_json["elements"][0]["versionName"]
+        apk_update_json["latestVersion"] = meta_json["elements"][0]["versionName"]
     except Exception as e:  # pylint: disable=broad-except
         log.error("UPDATE MAY BE BROKEN: Error getting version from apk: %s", e)
-        apk_update_json["version"] = "unknown"
+        apk_update_json["latestVersion"] = "unknown"
     return JSONResponse(apk_update_json)
 
 
