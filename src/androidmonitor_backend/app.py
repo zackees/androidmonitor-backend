@@ -181,10 +181,19 @@ async def apk() -> FileResponse:
 @app.get("/apk/update", tags=["client"])
 def apk_update() -> JSONResponse:
     """Get the apk."""
+    # Get apk info output-metadata.json
+    output_metadata = os.path.join(os.path.dirname(APK_UPDATE_FILE), "outout-metadata.json")
+    with open(output_metadata, encoding="utf-8", mode="r") as f:
+        meta_json: dict = json.loads(f.read())
     with open(APK_UPDATE_FILE, encoding="utf-8", mode="r") as f:
-        json_data: dict = json.loads(f.read())
-    json_data["url"] = f"{URL}/apk"
-    return JSONResponse(json_data)
+        apk_update_json: dict = json.loads(f.read())
+    apk_update_json["url"] = f"{URL}/apk"
+    try:
+        apk_update_json["version"] = meta_json["elements"][0]["versionName"]
+    except Exception as e:  # pylint: disable=broad-except
+        log.error("UPDATE MAY BE BROKEN: Error getting version from apk: %s", e)
+        apk_update_json["version"] = "unknown"
+    return JSONResponse(apk_update_json)
 
 
 @app.get("/", include_in_schema=False)

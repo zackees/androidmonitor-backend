@@ -1,6 +1,6 @@
 {
-  "latestVersion": "2.0.0",
-  "url": "__DYNAMIC__",
+  "latestVersion": "__DYNAMIC_VERSION__",
+  "url": "__DYNAMIC_URL__",
   "releaseNotes": [
     "- Still in beta",
     "- Bug fixes"
