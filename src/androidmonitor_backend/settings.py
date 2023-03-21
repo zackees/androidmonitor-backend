@@ -42,9 +42,9 @@ CLIENT_API_KEYS = frozenset(
     ]
 )
 CLIENT_TEST_TOKEN = "f2f4b921b3593220488fc099f39295e06f6d2cf67cd886853e423ca2900091a70836b1fa21490f76501d2c0e6a55276d8baa124097538b7a0b95e1df703471ff"
-DOWNLOAD_DIR = os.path.join(HERE, "download")
+APK_DIR = os.path.join(HERE, "apk")
 WWW_DIR = os.path.join(HERE, "www")
-DOWNLOAD_APK_FILE = os.path.join(DOWNLOAD_DIR, "app-release.apk")
+DOWNLOAD_APK_FILE = os.path.join(APK_DIR, "app-release.apk")
+APK_UPDATE_FILE = os.path.join(APK_DIR, "update-changelog.json")
 os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(LOG_DIR, exist_ok=True)
-os.makedirs(DOWNLOAD_DIR, exist_ok=True)

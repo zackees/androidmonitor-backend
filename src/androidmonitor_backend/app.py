@@ -45,14 +45,15 @@ from androidmonitor_backend.log import get_log_reversed, make_logger
 from androidmonitor_backend.settings import ALLOW_DB_CLEAR  # UPLOAD_DIR,
 from androidmonitor_backend.settings import (
     API_ADMIN_KEY,
+    APK_UPDATE_FILE,
     CLIENT_API_KEYS,
     CLIENT_TEST_TOKEN,
     DB_URL,
     DOWNLOAD_APK_FILE,
-    DOWNLOAD_DIR,
     IS_TEST,
     UPLOAD_DIR,
     URL,
+    WWW_DIR,
 )
 from androidmonitor_backend.util import async_download  # check_video
 from androidmonitor_backend.version import VERSION
@@ -161,14 +162,8 @@ def is_client_authenticated(client_api_key: str) -> bool:
 
 
 app.mount(
-    "/download",
-    StaticFiles(directory=DOWNLOAD_DIR, html=True, check_dir=True),
-    name="download",
-)
-
-app.mount(
     "/www",
-    StaticFiles(directory=DOWNLOAD_DIR, html=True, check_dir=True),
+    StaticFiles(directory=WWW_DIR, html=True, check_dir=True),
     name="www",
 )
 
@@ -181,6 +176,15 @@ async def apk() -> FileResponse:
         media_type="application/octet-stream",
         filename="androidmonitor.apk",
     )
+
+
+@app.get("/apk/update", tags=["client"])
+def apk_update() -> JSONResponse:
+    """Get the apk."""
+    with open(APK_UPDATE_FILE, encoding="utf-8", mode="r") as f:
+        json_data: dict = json.loads(f.read())
+    json_data["url"] = f"{URL}/apk"
+    return JSONResponse(json_data)
 
 
 @app.get("/", include_in_schema=False)
@@ -524,5 +528,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    print(f"Download dir: {DOWNLOAD_DIR}")
     main()
