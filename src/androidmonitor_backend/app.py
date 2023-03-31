@@ -45,11 +45,12 @@ from androidmonitor_backend.log import get_log_reversed, make_logger
 from androidmonitor_backend.settings import ALLOW_DB_CLEAR  # UPLOAD_DIR,
 from androidmonitor_backend.settings import (
     API_ADMIN_KEY,
+    APK_DIR,
+    APK_META_FILE,
     APK_UPDATE_FILE,
     CLIENT_API_KEYS,
     CLIENT_TEST_TOKEN,
     DB_URL,
-    DOWNLOAD_APK_FILE,
     IS_TEST,
     UPLOAD_DIR,
     URL,
@@ -171,8 +172,17 @@ app.mount(
 @app.get("/apk", tags=["client"])
 async def apk() -> FileResponse:
     """Get the apk."""
+    with open(APK_META_FILE, encoding="utf-8", mode="r") as f:
+        meta_json: dict = json.loads(f.read())
+    apk_elements = meta_json.get("elements", None)
+    if apk_elements is None or len(apk_elements) == 0:
+        return FileResponse("", status_code=404)
+    apk_filename = apk_elements[0].get("outputFile", None)
+    if apk_filename is None:
+        return FileResponse("", status_code=404)
+    apkfile = os.path.join(APK_DIR, apk_filename)
     return FileResponse(
-        DOWNLOAD_APK_FILE,
+        apkfile,
         media_type="application/octet-stream",
         filename="androidmonitor.apk",
     )
@@ -182,8 +192,7 @@ async def apk() -> FileResponse:
 def apk_update() -> JSONResponse:
     """Get the apk."""
     # Get apk info output-metadata.json
-    output_metadata = os.path.join(os.path.dirname(APK_UPDATE_FILE), "output-metadata.json")
-    with open(output_metadata, encoding="utf-8", mode="r") as f:
+    with open(APK_META_FILE, encoding="utf-8", mode="r") as f:
         meta_json: dict = json.loads(f.read())
     with open(APK_UPDATE_FILE, encoding="utf-8", mode="r") as f:
         apk_update_json: dict = json.loads(f.read())
