@@ -12,8 +12,8 @@ import os
 import socket
 import tempfile
 import unittest
-from datetime import datetime
 import warnings
+from datetime import datetime
 
 import boto3
 from botocore.exceptions import ClientError, NoCredentialsError
@@ -67,7 +67,6 @@ def upload_to_s3(local_file_path: str, s3_object_key: str) -> Exception | None:
     )
     try:
         s3.upload_file(local_file_path, BUCKET_NAME, s3_object_key)
-        s3.close()
         print(f"File uploaded successfully to {BUCKET_NAME}/{s3_object_key}")
         return None
     except FileNotFoundError as fnfe:
@@ -79,6 +78,8 @@ def upload_to_s3(local_file_path: str, s3_object_key: str) -> Exception | None:
     except ClientError as cerr:
         print(f"An error occurred while uploading the file: {cerr}")
         return cerr
+    finally:
+        s3.close()
 
 
 class S3Tester(unittest.TestCase):
