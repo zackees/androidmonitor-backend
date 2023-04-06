@@ -25,6 +25,7 @@ dependencies = [
     "supervisor",
     "Jinja2",
     "supervisor",
+    "boto3"  # AWS S3
 ]
 # Change this with the version number bump.
 version = "1.0.0"
@@ -36,7 +37,8 @@ good-names = [
     "ok",
     "id",
     "e",
-    "f"
+    "f",
+    "s3"
 ]
 
 [tool.mypy]
