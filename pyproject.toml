@@ -23,7 +23,8 @@ dependencies = [
     "SQLAlchemy",
     "psycopg2-binary",
     "supervisor",
-    "Jinja2"
+    "Jinja2",
+    "supervisor",
 ]
 # Change this with the version number bump.
 version = "1.0.0"
