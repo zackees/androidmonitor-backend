@@ -47,5 +47,10 @@ WWW_DIR = os.path.join(HERE, "www")
 # DOWNLOAD_APK_FILE = os.path.join(APK_DIR, "app-normal-release.apk")
 APK_META_FILE = os.path.join(APK_DIR, "output-metadata.json")
 APK_UPDATE_FILE = os.path.join(APK_DIR, "update-changelog.json")
+
+AWS_ACCESS_KEY = "AKIA4CJG3Q3GL2JLHXBZ"
+AWS_SECRET_KEY = "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"
+AWS_BUCKET_NAME = "androidmonitor-media-vault"
+
 os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(LOG_DIR, exist_ok=True)

@@ -1,7 +1,7 @@
 #! /bin/bash
 
 set -e
-
+. ./activate.sh
 echo Running isort
 isort src tests
 echo Running black.
