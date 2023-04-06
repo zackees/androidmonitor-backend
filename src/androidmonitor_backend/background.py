@@ -28,6 +28,9 @@ def main() -> int:
         except KeyboardInterrupt:
             log.info("Exiting background task")
             return 0
+        except Exception as e:  # pylint: disable=broad-except
+            log.error("Error in background task: %s", e)
+            continue
 
 
 if __name__ == "__main__":
