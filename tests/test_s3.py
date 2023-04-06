@@ -34,12 +34,12 @@ def create_temp_file() -> str:
     Returns:
         str: The path to the temporary file.
     """
-    current_date = datetime.now().strftime("%Y-%m-%d")
+    current_date = datetime.now().isoformat()
     computer_name = socket.gethostname()
     ip_address = socket.gethostbyname(computer_name)
 
     with tempfile.NamedTemporaryFile(mode="w+", delete=False) as temp_file:
-        temp_file.write(f"Date: {current_date}\n")
+        temp_file.write(f"Date and Time: {current_date}\n")
         temp_file.write(f"Computer name: {computer_name}\n")
         temp_file.write(f"IP address: {ip_address}\n")
         temp_file.write(f"Hostname: {socket.gethostbyaddr(ip_address)[0]}\n")
