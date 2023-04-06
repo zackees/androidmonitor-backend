@@ -14,7 +14,7 @@ import tempfile
 import unittest
 from datetime import datetime
 
-from androidmonitor_backend.s3 import s3_upload
+from androidmonitor_backend.s3 import s3_list, s3_upload
 
 
 def create_temp_file() -> str:
@@ -40,16 +40,21 @@ def create_temp_file() -> str:
 class S3Tester(unittest.TestCase):
     """Test the S3 upload functionality."""
 
-    def test_example(self) -> None:
+    def test_upload_and_list(self) -> None:
         """S3 bucket tester using boto."""
         temp_file_path = create_temp_file()
         self.assertTrue(
             os.path.exists(temp_file_path), f"File {temp_file_path} does not exist"
         )
-        exc = s3_upload(temp_file_path, "test/androidmonitor-backend/s3_unit_test.txt")
+        s3_prefix = "test/androidmonitor-backend"
+        s3_key = f"{s3_prefix}/s3_unit_test.txt"
+        exc = s3_upload(temp_file_path, s3_key)
         self.assertIsNone(
             exc, f"Exception was raised while attempting to write to a bucket: {exc}"
         )
+        object_keys = s3_list(s3_prefix)
+        self.assertIsInstance(object_keys, list)
+        self.assertIn(s3_key, object_keys)  # type: ignore
 
 
 if __name__ == "__main__":
