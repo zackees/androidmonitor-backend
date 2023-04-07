@@ -63,7 +63,6 @@ class S3Tester(unittest.TestCase):
         self.assertIn(s3_key, object_keys)  # type: ignore
 
     unittest.skipIf(DISABLE_UPLOAD_REMOVE_TEST, "Skipping remove tests")
-
     def test_upload_download_remove(self) -> None:
         """Test uploading, downloading, and removing a file from the S3 bucket."""
         content = "Test content"
