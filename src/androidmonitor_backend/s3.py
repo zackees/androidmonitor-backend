@@ -15,6 +15,56 @@ from androidmonitor_backend.settings import (
 log = make_logger(__name__)
 
 
+def s3_list(s3_prefix: str = "") -> list[str] | Exception:
+    """
+    List objects in the specified S3 bucket with an optional prefix.
+
+    Args:
+        prefix (str, optional): The prefix to filter objects by. Defaults to "".
+
+    Returns:
+        list[str] | Exception: Returns a list of object keys if successful,
+        otherwise returns the exception.
+    """
+    s3 = boto3.client(
+        "s3", aws_access_key_id=AWS_ACCESS_KEY, aws_secret_access_key=AWS_SECRET_KEY
+    )
+    try:
+        result = s3.list_objects_v2(Bucket=AWS_BUCKET_NAME, Prefix=s3_prefix)
+        object_keys = [obj["Key"] for obj in result.get("Contents", [])]
+        return object_keys
+    except ClientError as cerr:
+        log.error("An error occurred while listing objects: %s", cerr)
+        return cerr
+    finally:
+        s3.close()
+
+
+def s3_download_utf8(s3_object_key: str) -> str | Exception:
+    """
+    Read a file from the specified S3 bucket.
+
+    Args:
+        s3_object_key (str): The S3 object key (including the path) of the file to be read.
+
+    Returns:
+        bytes | Exception: Returns the file content as bytes if successful,
+        otherwise returns the exception.
+    """
+    s3 = boto3.client(
+        "s3", aws_access_key_id=AWS_ACCESS_KEY, aws_secret_access_key=AWS_SECRET_KEY
+    )
+    try:
+        response = s3.get_object(Bucket=AWS_BUCKET_NAME, Key=s3_object_key)
+        file_content = response["Body"].read()
+        return file_content.decode("utf-8")
+    except ClientError as cerr:
+        log.error("An error occurred while reading the file: %s", cerr)
+        return cerr
+    finally:
+        s3.close()
+
+
 def s3_upload(local_file_path: str, s3_object_key: str) -> Exception | None:
     """
     Upload a file to the specified S3 bucket.
@@ -51,26 +101,28 @@ def s3_upload(local_file_path: str, s3_object_key: str) -> Exception | None:
         s3.close()
 
 
-def s3_list(s3_prefix: str = "") -> list[str] | Exception:
+# Warning, this function returns an exception because of invalid
+# permissions for file removal as of 2023-04-06
+def s3_remove(s3_object_key: str) -> Exception | None:
     """
-    List objects in the specified S3 bucket with an optional prefix.
+    Delete a file from the specified S3 bucket.
 
     Args:
-        prefix (str, optional): The prefix to filter objects by. Defaults to "".
+        s3_object_key (str): The S3 object key (including the path) of the file to be deleted.
 
     Returns:
-        list[str] | Exception: Returns a list of object keys if successful,
+        Exception | None: Returns None if the file is successfully deleted,
         otherwise returns the exception.
     """
     s3 = boto3.client(
         "s3", aws_access_key_id=AWS_ACCESS_KEY, aws_secret_access_key=AWS_SECRET_KEY
     )
     try:
-        result = s3.list_objects_v2(Bucket=AWS_BUCKET_NAME, Prefix=s3_prefix)
-        object_keys = [obj["Key"] for obj in result.get("Contents", [])]
-        return object_keys
+        s3.delete_object(Bucket=AWS_BUCKET_NAME, Key=s3_object_key)
+        log.info("File deleted successfully from %s/%s", AWS_BUCKET_NAME, s3_object_key)
+        return None
     except ClientError as cerr:
-        log.error("An error occurred while listing objects: %s", cerr)
+        log.error("An error occurred while deleting the file: %s", cerr)
         return cerr
     finally:
         s3.close()
