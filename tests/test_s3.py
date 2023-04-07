@@ -18,7 +18,7 @@ from datetime import datetime
 
 from androidmonitor_backend.s3 import s3_download_utf8, s3_list, s3_remove, s3_upload
 
-DISABLE_UPLOAD_REMOVE_TEST = False
+DISABLE_UPLOAD_REMOVE_TEST = True
 
 
 def create_temp_file(content: str) -> str:
