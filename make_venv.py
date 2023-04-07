@@ -80,5 +80,4 @@ if sys.platform == "win32":
 with open("activate.sh", "wt") as fd:
     fd.write(_ACTIVATE_SH)
 
-
 print('Now use ". activate.sh" (at the project root dir) to enter into the environment.')

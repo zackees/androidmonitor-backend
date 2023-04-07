@@ -1,3 +1,4 @@
+
 #!/bin/bash
 set -e
 # if IN_ACTIVATED_ENV is set, then we are already in the venv
