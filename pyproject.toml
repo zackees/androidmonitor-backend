@@ -25,6 +25,7 @@ dependencies = [
     "supervisor",
     "Jinja2",
     "supervisor",
+    "requests",
     "boto3"  # AWS S3
 ]
 # Change this with the version number bump.
