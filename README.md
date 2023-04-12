@@ -54,6 +54,16 @@ You'll need to set the following environmental variables:
     * begins operation
     * when uploading, the token is used to grant access to the /v1/upload endpoint
 
+## DB:
+
+  * db identifier: androidmonitor-db
+  * initial database name: androidmonitor_db
+  * master username: postgres
+  * password: xtoNtOAvmd0rLkFOXZvF20h4af346INA1XjR5ZzSo5
+  * Account: 829547054796
+  * KMS Key ID: c5a4dc13-7bc2-43b8-a5ed-1927194e7432
+  * Reminder: We are on a free tier starting on 2023-Apr-12, which expires after one year
+
 ## TODO
 
   * [ ] UID clearing does not seem to work correctly
