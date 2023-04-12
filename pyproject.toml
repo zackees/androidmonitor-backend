@@ -41,6 +41,7 @@ good-names = [
     "f",
     "s3"
 ]
+disable = "too-many-arguments,too-many-locals"
 
 [tool.mypy]
 ignore_missing_imports = true

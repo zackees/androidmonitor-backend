@@ -44,6 +44,9 @@ vid_table = Table(
     Column("id", Integer, primary_key=True),
     Column("user_uid", String),
     Column("uri_video", String),
+    Column("appname", String),
+    Column("start", DateTime),
+    Column("end", DateTime),
     Column("uri_meta", String),
     Column("created", DateTime, index=True),
 )
@@ -142,7 +145,14 @@ def db_get_log(log_id: int) -> tuple[str, datetime]:
         return out
 
 
-def db_register_upload(uid: str, uri_video: str, uri_meta: str) -> None:
+def db_register_upload(
+    uid: str,
+    uri_video: str,
+    appname: str,
+    start: datetime,
+    end: datetime,
+    uri_meta: str,
+) -> None:
     """Register a video upload."""
     db_init_once()
     with Session() as session:
@@ -154,6 +164,9 @@ def db_register_upload(uid: str, uri_video: str, uri_meta: str) -> None:
         insert = vid_table.insert().values(
             user_uid=uid,
             uri_video=uri_video,
+            appname=appname,
+            start=start,
+            end=end,
             uri_meta=uri_meta,
             created=datetime.utcnow(),
         )

@@ -6,7 +6,7 @@
 
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from hmac import compare_digest
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from zipfile import ZipFile
@@ -56,7 +56,7 @@ from androidmonitor_backend.settings import (
     URL,
     WWW_DIR,
 )
-from androidmonitor_backend.util import async_download  # check_video
+from androidmonitor_backend.util import async_download, async_readutf8  # check_video
 from androidmonitor_backend.version import VERSION
 
 colorama.init()
@@ -385,13 +385,36 @@ async def upload(
     vidfile_path = os.path.join(upload_dir, vidfilename)
     metafile_path = os.path.splitext(vidfile_path)[0] + ".json"
     try:
-        await async_download(metadata, metafile_path)
-        await metadata.close()
+        metadatastr = await async_readutf8(metadata, close=False)
+        metadatajson = json.loads(metadatastr)
+        starttime_str = metadatajson["start"]
+        starttime = datetime.fromisoformat(starttime_str)
+        duration_str = metadatajson["duration"]
+        print(metadatajson["data"])
+        data = metadatajson["data"]
+        # Get the middle element. TODO We should retire the appname list since
+        # all videos are segmented to just record one app usage, but this will require
+        # some client changes.
+        idx = len(data) // 2
+        appname = data[idx][0]
+        assert appname != "", "No appname found"
+        duration = timedelta(milliseconds=float(duration_str))
+        endtime = starttime + duration
+        await async_download(metadata, metafile_path, close=True)
         log.info("Metafile file: %s", metafile_path)
-        await async_download(vidfile, vidfile_path)
+        # Now read the metadata
+        log.info("Metadata: %s", metadatastr)
+        await async_download(vidfile, vidfile_path, close=True)
         await vidfile.close()
         log.info("Video file: %s", vidfile_path)
-        db_register_upload(uid=user.uid, uri_video=vidfile_path, uri_meta=metafile_path)
+        db_register_upload(
+            uid=user.uid,
+            uri_video=vidfile_path,
+            appname=appname,
+            start=starttime,
+            end=endtime,
+            uri_meta=metafile_path,
+        )
         return PlainTextResponse(f"Uploaded {vidfile_path} and {metafile_path}")
     except Exception as exc:  # pylint: disable=broad-except
         log.exception("Error during upload: %s", exc)

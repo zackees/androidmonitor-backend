@@ -9,12 +9,23 @@ from fastapi import UploadFile  # type: ignore
 from androidmonitor_backend.settings import UPLOAD_CHUNK_SIZE
 
 
-async def async_download(src: UploadFile, dst: str) -> None:
+async def async_download(src: UploadFile, dst: str, close=True) -> None:
     """Downloads a file to the destination."""
     with open(dst, mode="wb") as filed:
         while (chunk := await src.read(UPLOAD_CHUNK_SIZE)) != b"":
             filed.write(chunk)
-    await src.close()
+    if close:
+        await src.close()
+
+
+async def async_readutf8(src: UploadFile, close=True) -> str:
+    """Reads a file as UTF-8."""
+    out = b""
+    while (chunk := await src.read(UPLOAD_CHUNK_SIZE)) != b"":
+        out += chunk
+    if close:
+        await src.close()
+    return out.decode("utf-8")
 
 
 def check_video(path: str, log: Any) -> None:

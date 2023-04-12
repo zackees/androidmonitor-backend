@@ -8,7 +8,7 @@ Db test.
 import os
 import shutil
 import unittest
-from datetime import datetime
+from datetime import datetime, timedelta
 
 HERE = os.path.relpath(os.path.dirname(__file__), ".")
 DB_DIR = os.path.join(HERE, "db_data")
@@ -81,8 +81,15 @@ class DbTester(unittest.TestCase):
         """Tests that a uid can be expired"""
         db_clear()
         db_insert_uid("0000", datetime.utcnow())
+        start: datetime = datetime.utcnow()
+        end = start + timedelta(seconds=1)
         db_register_upload(
-            uid="0000", uri_video="/tmp/vid.mp4", uri_meta="/tmp/meta.json"
+            uid="0000",
+            uri_video="/tmp/vid.mp4",
+            appname="com.google",
+            start=start,
+            end=end,
+            uri_meta="/tmp/meta.json",
         )
         db_str = db_to_string()
         print(db_str)
