@@ -309,6 +309,7 @@ def db_clear() -> None:
     with engine.connect():
         user_table.drop(engine)
         vid_table.drop(engine)
+        logs_table.drop(engine)
         meta.create_all(engine)
 
 
