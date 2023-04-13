@@ -31,11 +31,13 @@ TASK_SLEEP_TIME = int(os.environ.get("TASK_SLEEP_TIME", DEFAULT_TASK_SLEEP_TIME)
 IS_PRODUCTION = os.getenv("IS_PRODUCTION", "0") == "1"
 IS_TEST = not IS_PRODUCTION
 # Allow db clear if os.enviorment variable is set or IS_TEST
-ALLOW_DB_CLEAR = os.getenv("ALLOW_DB_CLEAR", "0") == "1" or IS_TEST
+ALLOW_DB_CLEAR = os.getenv("ALLOW_DB_CLEAR", IS_TEST) == "1"
 DEFAULT_PROD_DB_URL = "postgresql://androidmonitor_db_user:R4i7lYhwKsmAIlXku8x1WrTepm1PaDfe@dpg-cfdkeqcgqg45rntp0go0-a.oregon-postgres.render.com/androidmonitor_db"
 DEFAULT_TEST_DB_URL = f"sqlite:///{DATA_DIR}/db.sqlite3".replace("\\", "/")
 USE_DB_SQLITE = os.getenv("USE_DB_SQLITE", IS_TEST)
-DB_URL = os.getenv("DB_URL", DEFAULT_TEST_DB_URL if USE_DB_SQLITE else DEFAULT_PROD_DB_URL)
+DB_URL = os.getenv(
+    "DB_URL", DEFAULT_TEST_DB_URL if USE_DB_SQLITE else DEFAULT_PROD_DB_URL
+)
 if DB_URL.startswith("postgres://"):
     DB_URL = DB_URL.replace(
         "postgres://", "postgresql://", 1
