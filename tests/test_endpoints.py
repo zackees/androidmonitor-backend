@@ -10,7 +10,6 @@ import unittest
 import requests  # type: ignore
 import uvicorn
 from uvicorn.config import Config
-
 from androidmonitor_backend import settings
 
 APP_NAME = "androidmonitor_backend.app:app"
