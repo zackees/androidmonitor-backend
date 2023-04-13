@@ -57,7 +57,8 @@ from androidmonitor_backend.settings import (
     URL,
     WWW_DIR,
 )
-from androidmonitor_backend.util import async_download, async_readutf8  # check_video
+from androidmonitor_backend.util import async_download  # check_video
+from androidmonitor_backend.util import async_readutf8, parse_datetime
 from androidmonitor_backend.version import VERSION
 
 colorama.init()
@@ -392,7 +393,7 @@ async def upload(
         metadatastr = await async_readutf8(metadata, close=False)
         metadatajson = json.loads(metadatastr)
         starttime_str = metadatajson["start"]
-        starttime = datetime.fromisoformat(starttime_str)
+        starttime = parse_datetime(starttime_str)
         duration_str = metadatajson["duration"]
         data = metadatajson["data"]
         # Get the middle element. TODO We should retire the appname list since

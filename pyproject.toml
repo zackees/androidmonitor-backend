@@ -26,7 +26,8 @@ good-names = [
     "id",
     "e",
     "f",
-    "s3"
+    "s3",
+    "dt"
 ]
 disable = "too-many-arguments,too-many-locals"
 

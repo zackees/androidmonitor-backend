@@ -2,11 +2,21 @@
 Implements async download
 """
 import subprocess
+from datetime import datetime
 from typing import Any
 
+import dateutil.parser  # type: ignore
 from fastapi import UploadFile  # type: ignore
 
 from androidmonitor_backend.settings import UPLOAD_CHUNK_SIZE
+
+
+def parse_datetime(date_str: str) -> datetime:
+    """Parses a date string."""
+    try:
+        return datetime.fromisoformat(date_str)
+    except ValueError:
+        return dateutil.parser.parse(date_str, fuzzy=True)
 
 
 async def async_download(src: UploadFile, dst: str, close=True) -> None:
