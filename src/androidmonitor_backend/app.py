@@ -319,7 +319,7 @@ def register(
     x_uid: str = Header(...), x_client_api_key: str = Header(...)
 ) -> JSONResponse:
     """Tries to register a device"""
-    if not is_authenticated(x_client_api_key):
+    if not is_client_authenticated(x_client_api_key):
         return JSONResponse({"error": "Invalid API key"}, status_code=401)
     x_uid = x_uid.replace("-", "")
     ok, token = db_try_register(x_uid)

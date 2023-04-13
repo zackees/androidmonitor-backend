@@ -2,6 +2,7 @@
 Setup development environment
 """
 
+# pylint: disable=wrong-import-position
 
 import os
 
