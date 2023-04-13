@@ -6,6 +6,7 @@ Settings
 
 import os
 
+HAS_URL = "URL" in os.environ
 URL = os.environ.get("URL", "http://localhost:8080")
 HERE = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(os.path.dirname(HERE))
@@ -35,7 +36,9 @@ DEFAULT_PROD_DB_URL = "postgresql://androidmonitor_db_user:R4i7lYhwKsmAIlXku8x1W
 DEFAULT_TEST_DB_URL = f"sqlite:///{DATA_DIR}/db.sqlite3".replace("\\", "/")
 DB_URL = os.getenv("DB_URL", DEFAULT_TEST_DB_URL if IS_TEST else DEFAULT_PROD_DB_URL)
 if DB_URL.startswith("postgres://"):
-    DB_URL = DB_URL.replace("postgres://", "postgresql://", 1)  # Fix prefix for sqlalchemy
+    DB_URL = DB_URL.replace(
+        "postgres://", "postgresql://", 1
+    )  # Fix prefix for sqlalchemy
 API_ADMIN_KEY = os.getenv("API_KEY", "test")
 assert IS_TEST or (API_ADMIN_KEY != "test"), "API_KEY must be set in production"
 CLIENT_API_KEYS = frozenset(

@@ -2,20 +2,20 @@
 Tests the endpoints of the API.
 """
 import contextlib
+import json
 import threading
 import time
 import unittest
-import json
-import requests   # type: ignore
+
+import requests  # type: ignore
 import uvicorn
 from uvicorn.config import Config
-
 
 APP_NAME = "androidmonitor_backend.app:app"
 HOST = "localhost"
 PORT = 4422  # Arbitrarily chosen.
 REMOTE_ENDPOINT = "https://androidmonitor.internetwatchdogs.org/v1/info"
-__version__ = '1.0.0'
+__version__ = "1.0.0"
 
 # Credit:
 # https://github.com/zackees/vids-db-server/blob/main/vids_db_server/testing/run_server_in_thread.py
@@ -63,7 +63,9 @@ def test_getinfo(self) -> None:
     with self.run_server_in_thread():
         response = requests.get(f"{REMOTE_ENDPOINT}/v1/info", timeout=5)
         assert response.ok, f"Request failed with status code {response.status_code}"
-        assert response.status_code == 200, f"Expected status 200 but got {response.status_code}"
+        assert (
+            response.status_code == 200
+        ), f"Expected status 200 but got {response.status_code}"
         try:
             response_data = response.json()
         except json.decoder.JSONDecodeError as e:

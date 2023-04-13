@@ -51,6 +51,7 @@ from androidmonitor_backend.settings import (
     CLIENT_API_KEYS,
     CLIENT_TEST_TOKEN,
     DB_URL,
+    HAS_URL,
     IS_TEST,
     UPLOAD_DIR,
     URL,
@@ -103,11 +104,14 @@ def app_description() -> str:
     lines.append("## Info")
     lines.append(f"  * Version: `{VERSION}`")
     lines.append("  * Started at: `" + STARTUP_DATETIME.isoformat() + " UTC`")
+    if HAS_URL:
+        lines.append(f"  * URL: `{URL}`")
+    else:
+        lines.append(f"  * URL: Warning, URL *Not set*, defaulting to {URL}")
     if IS_TEST:
         lines.append("  * Running in `TEST` mode")
         lines.append("    * x-api-admin-key: *TEST MODE - NO AUTHENTICATION*")
         lines.append("    * DB_URL: " + f"`{DB_URL}`")
-        lines.append(f"    * URL: `{URL}`")
         lines.append("    * ALLOW_DB_CLEAR: " + f"`{ALLOW_DB_CLEAR}`")
         lines.append("    * CLIENT_API_KEYS:")
         for client_key in CLIENT_API_KEYS:
