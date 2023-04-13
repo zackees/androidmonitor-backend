@@ -131,39 +131,58 @@ def test_add_uid(self) -> None:
             "success", False
         ), "Failed to register client: success=False"
 
+
 def test_add_uid(self) -> None:
     """Test the add_uid endpoint."""
     with self.run_server_in_thread():
         # Set up the request headers
         headers = {
-            'accept': 'application/json',
-            'x-api-admin-key': API_ADMIN_KEY,
+            "accept": "application/json",
+            "x-api-admin-key": settings.API_ADMIN_KEY,
         }
         # Make the request to add a UID
         response = requests.get(ADD_UID_ENDPOINT, headers=headers, timeout=5)
         # Check the response was successful
         assert response.ok, f"Request failed with status code {response.status_code}"
-        assert response.status_code == 200, f"Request failed with status code {response.status_code}"
+        assert (
+            response.status_code == 200
+        ), f"Request failed with status code {response.status_code}"
         try:
             response_data = response.json()
         except json.JSONDecodeError:
             response_data = {}
             assert False, "Failed to decode response JSON"
-        assert response_data.get('success', False), f"Expected 'success' key to be True but got {response_data.get('success')}"
-        uid = response_data.get('uid', None)
+        assert response_data.get(
+            "success", False
+        ), f"Expected 'success' key to be True but got {response_data.get('success')}"
+        uid = response_data.get("uid", None)
         # Query the list of UIDs to check that the UID was added
-        response = requests.get("https://api.androidmonitor.org/v1/list/uids", timeout=5)
+        response = requests.get(
+            "https://api.androidmonitor.org/v1/list/uids", timeout=5
+        )
         try:
-            response_data = response.json() 
+            response_data = response.json()
         except json.JSONDecodeError:
             response_data = {}
             assert False, "Failed to decode response JSON"
         assert response_data, "Failed to list UIDs"
-         # Check that the UID was added to the list
-        uid_list = response_data.get('uids', [])
+        # Check that the UID was added to the list
+        uid_list = response_data.get("uids", [])
         assert len(uid_list) == 1, f"Expected 1 UID but found {len(uid_list)} UIDs"
         assert uid_list[0] == uid, f"Expected UID {uid} but found UID {uid_list[0]}"
-
+        # Register the client with the UID
+        payload = {
+            "uid": uid,
+            "client_api_key": list(settings.CLIENT_API_KEYS)[0],
+        }
+        response = requests.post(
+            "https://api.androidmonitor.org/v1/client_register", json=payload, timeout=5
+        )
+        response_data = response.json()
+        # Check that the registration was successful
+        assert response_data.get(
+            "success", False
+        ), "Failed to register client: success=False"
 
 
 if __name__ == "__main__":
