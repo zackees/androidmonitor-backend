@@ -56,6 +56,8 @@ APK_UPDATE_FILE = os.path.join(APK_DIR, "update-changelog.json")
 AWS_ACCESS_KEY = "AKIA4CJG3Q3GL2JLHXBZ"
 AWS_SECRET_KEY = "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"
 AWS_BUCKET_NAME = "androidmonitor-media-vault"
+S3_UPLOAD_DIR = "s3://upload"
+USE_S3_STORAGE = os.environ.get("USE_S3_PATH", "0" if not IS_PRODUCTION else "1") == "1"
 
 os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(LOG_DIR, exist_ok=True)

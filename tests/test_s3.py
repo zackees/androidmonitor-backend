@@ -16,7 +16,7 @@ import tempfile
 import unittest
 from datetime import datetime
 
-from androidmonitor_backend.s3 import s3_download_utf8, s3_list, s3_remove, s3_upload
+from androidmonitor_backend.s3 import s3_fetch_utf8, s3_list, s3_remove, s3_upload
 
 DISABLE_UPLOAD_REMOVE_TEST = True
 
@@ -62,6 +62,23 @@ class S3Tester(unittest.TestCase):
         self.assertIsInstance(object_keys, list)
         self.assertIn(s3_key, object_keys)  # type: ignore
 
+    def test_upload_s3_prefix_and_download(self) -> None:
+        """S3 bucket tester using boto."""
+        content = "does s3 prefix work?"
+        temp_file_path = create_temp_file(content=content)
+        self.assertTrue(
+            os.path.exists(temp_file_path), f"File {temp_file_path} does not exist"
+        )
+        s3_prefix = "s3://test/androidmonitor-backend"
+        s3_key = f"{s3_prefix}/s3_unit_test.txt"
+        exc = s3_upload(temp_file_path, s3_key)
+        self.assertIsNone(
+            exc, f"Exception was raised while attempting to write to a bucket: {exc}"
+        )
+        content = s3_fetch_utf8(s3_key)  # type: ignore
+        self.assertIsInstance(content, str)
+        self.assertEqual(content, content)
+
     @unittest.skipIf(
         DISABLE_UPLOAD_REMOVE_TEST,
         "Skipping test because s3_remove lacks permissions",
@@ -82,7 +99,7 @@ class S3Tester(unittest.TestCase):
         self.assertIsNone(
             exc, f"Exception was raised while attempting to write to a bucket: {exc}"
         )
-        downloaded_content = s3_download_utf8(s3_key)
+        downloaded_content = s3_fetch_utf8(s3_key)
         # assert downloaded_content is str
         self.assertIsInstance(downloaded_content, str)
         self.assertEqual(content, downloaded_content)

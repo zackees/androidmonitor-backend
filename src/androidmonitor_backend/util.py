@@ -1,6 +1,8 @@
 """
 Implements async download
 """
+
+import os
 import subprocess
 from datetime import datetime
 from typing import Any
@@ -8,6 +10,7 @@ from typing import Any
 import dateutil.parser  # type: ignore
 from fastapi import UploadFile  # type: ignore
 
+from androidmonitor_backend.asyncwrap import asyncwrap
 from androidmonitor_backend.settings import UPLOAD_CHUNK_SIZE
 
 
@@ -36,6 +39,12 @@ async def async_readutf8(src: UploadFile, close=True) -> str:
     if close:
         await src.close()
     return out.decode("utf-8")
+
+
+@asyncwrap
+def async_os_remove(path: str) -> None:
+    """Async wrapper for os.remove."""
+    os.remove(path)
 
 
 def check_video(path: str, log: Any) -> None:

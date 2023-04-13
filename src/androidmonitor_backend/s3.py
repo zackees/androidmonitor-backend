@@ -2,9 +2,11 @@
 Handles upload to the S3 bucket.
 """
 
+
 import boto3
 from botocore.exceptions import ClientError, NoCredentialsError
 
+from androidmonitor_backend.asyncwrap import asyncwrap
 from androidmonitor_backend.log import make_logger
 from androidmonitor_backend.settings import (
     AWS_ACCESS_KEY,
@@ -40,7 +42,48 @@ def s3_list(s3_prefix: str = "") -> list[str] | Exception:
         s3.close()
 
 
-def s3_download_utf8(s3_object_key: str) -> str | Exception:
+def s3_download(s3_object_key: str, local_file_path: str) -> Exception | None:
+    """
+    Download a file from the specified S3 bucket.
+
+    Args:
+        s3_object_key (str): The S3 object key (including the path) of the file to be read.
+        local_file_path (str): The local path to the file to be downloaded.
+
+    Returns:
+        Exception | None: Returns the exception if an error occurred, otherwise returns None.
+    """
+    s3 = boto3.client(
+        "s3", aws_access_key_id=AWS_ACCESS_KEY, aws_secret_access_key=AWS_SECRET_KEY
+    )
+    try:
+        s3.download_file(AWS_BUCKET_NAME, s3_object_key, local_file_path)
+        return None
+    except ClientError as cerr:
+        log.error("An error occurred while downloading the file: %s", cerr)
+        return cerr
+    finally:
+        s3.close()
+
+
+def s3_fetch_utf8(s3_object_key: str) -> str | Exception:
+    """
+    Read a file from the specified S3 bucket.
+
+    Args:
+        s3_object_key (str): The S3 object key (including the path) of the file to be read.
+
+    Returns:
+        bytes | Exception: Returns the file content as bytes if successful,
+        otherwise returns the exception.
+    """
+    out = s3_fetch(s3_object_key)
+    if isinstance(out, Exception):
+        return out
+    return out.decode("utf-8")
+
+
+def s3_fetch(s3_object_key: str) -> bytes | Exception:
     """
     Read a file from the specified S3 bucket.
 
@@ -57,12 +100,18 @@ def s3_download_utf8(s3_object_key: str) -> str | Exception:
     try:
         response = s3.get_object(Bucket=AWS_BUCKET_NAME, Key=s3_object_key)
         file_content = response["Body"].read()
-        return file_content.decode("utf-8")
+        return file_content
     except ClientError as cerr:
         log.error("An error occurred while reading the file: %s", cerr)
         return cerr
     finally:
         s3.close()
+
+
+@asyncwrap
+def async_s3_upload(path: str, s3_path: str) -> None:
+    """Uploads a file to s3."""
+    s3_upload(path, s3_path)
 
 
 def s3_upload(local_file_path: str, s3_object_key: str) -> Exception | None:
