@@ -22,7 +22,6 @@ dependencies = [
     "colorama",
     "SQLAlchemy",
     "psycopg2-binary",
-    "psycopg2",
     "supervisor",
     "Jinja2",
     "supervisor",
