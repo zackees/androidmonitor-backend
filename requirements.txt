@@ -1,0 +1,15 @@
+fastapi
+uvicorn[standard]
+python-multipart
+multipart
+pathvalidate
+concurrent-log-handler
+file_read_backwards
+colorama
+SQLAlchemy
+psycopg2-binary
+supervisor
+Jinja2
+supervisor
+requests
+boto3  # AWS S3
