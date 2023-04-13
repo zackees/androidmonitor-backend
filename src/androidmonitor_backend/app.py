@@ -394,7 +394,6 @@ async def upload(
         starttime_str = metadatajson["start"]
         starttime = datetime.fromisoformat(starttime_str)
         duration_str = metadatajson["duration"]
-        print(metadatajson["data"])
         data = metadatajson["data"]
         # Get the middle element. TODO We should retire the appname list since
         # all videos are segmented to just record one app usage, but this will require
