@@ -56,13 +56,8 @@ You'll need to set the following environmental variables:
 
 ## DB:
 
-  * db identifier: androidmonitor-db
-  * initial database name: androidmonitor_db
-  * master username: postgres
-  * password: xtoNtOAvmd0rLkFOXZvF20h4af346INA1XjR5ZzSo5
-  * Account: 829547054796
-  * KMS Key ID: c5a4dc13-7bc2-43b8-a5ed-1927194e7432
-  * Reminder: We are on a free tier starting on 2023-Apr-12, which expires after one year
+  * Render.com Postgres:
+    * postgres://androidmonitor_backend_db_user:bNft2nTH4UZ2Uk7KNBtwowdNNm9wGIqU@dpg-cfv8nit269v0ptk5cnlg-a.oregon-postgres.render.com/androidmonitor_backend_db
 
 ## TODO
 
