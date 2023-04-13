@@ -2,10 +2,12 @@
     app worker
 """
 
-# pylint: disable=redefined-builtin
+# pylint: disable=redefined-builtin,consider-using-with
 
 import json
 import os
+import tempfile
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from hmac import compare_digest
 from tempfile import NamedTemporaryFile, TemporaryDirectory
@@ -24,6 +26,7 @@ from fastapi.responses import (
 )
 from fastapi.staticfiles import StaticFiles
 
+from androidmonitor_backend import filestore
 from androidmonitor_backend.db import (
     VideoItem,
     db_add_log,
@@ -42,8 +45,9 @@ from androidmonitor_backend.db import (
     db_try_register,
 )
 from androidmonitor_backend.log import get_log_reversed, make_logger
-from androidmonitor_backend.settings import ALLOW_DB_CLEAR  # UPLOAD_DIR,
+from androidmonitor_backend.s3 import async_s3_upload
 from androidmonitor_backend.settings import (
+    ALLOW_DB_CLEAR,
     API_ADMIN_KEY,
     APK_DIR,
     APK_META_FILE,
@@ -53,12 +57,14 @@ from androidmonitor_backend.settings import (
     DB_URL,
     HAS_URL,
     IS_TEST,
+    S3_UPLOAD_DIR,
     UPLOAD_DIR,
     URL,
+    USE_S3_STORAGE,
     WWW_DIR,
 )
 from androidmonitor_backend.util import async_download  # check_video
-from androidmonitor_backend.util import async_readutf8, parse_datetime
+from androidmonitor_backend.util import async_os_remove, async_readutf8, parse_datetime
 from androidmonitor_backend.version import VERSION
 
 colorama.init()
@@ -85,6 +91,14 @@ tags_metadata = [
         "description": "Test api",
     },
 ]
+
+
+@dataclass
+class ResourcePath:
+    """Represents a resource path."""
+
+    localpath: str
+    s3_path: str
 
 
 def get_form() -> str:
@@ -254,11 +268,10 @@ def test_download_video() -> FileResponse:
     if len(recent_videos) == 0:
         return FileResponse("", status_code=404)
     video = recent_videos[0]
-    return FileResponse(
-        video.uri_video,
-        media_type="video/mp4",
-        filename="video.mp4",
+    fileresp = filestore.create_download_response(
+        video.uri_video, media_type="video/mp4", filename="video.mp4"
     )
+    return fileresp
 
 
 @app.get("/test/download/videos", tags=["test"])
@@ -276,10 +289,20 @@ def test_download_videos(limit: int = 5) -> FileResponse:
     zfile.close()
     with ZipFile(zfile.name, "w") as zip_obj:
         for i, video in enumerate(recent_videos):
-            vidname = f"video{i}.mp4"
-            metaname = f"meta{i}.json"
-            zip_obj.write(video.uri_video, arcname=vidname)
-            zip_obj.write(video.uri_meta, arcname=metaname)
+            tmpvid = tempfile.NamedTemporaryFile(suffix=".mp4", delete=False)
+            tmpmeta = tempfile.NamedTemporaryFile(suffix=".json", delete=False)
+            tmpvid.close()
+            tmpmeta.close()
+            try:
+                filestore.copy(video.uri_video, tmpvid.name)
+                filestore.copy(video.uri_meta, tmpmeta.name)
+                vidname = f"video{i}.mp4"
+                metaname = f"meta{i}.json"
+                zip_obj.write(tmpvid.name, arcname=vidname)
+                zip_obj.write(tmpmeta.name, arcname=metaname)
+            finally:
+                os.remove(tmpvid.name)
+                os.remove(tmpmeta.name)
     assert os.path.exists(zfile.name)
     bg_tasks = BackgroundTasks()
     bg_tasks.add_task(lambda: os.remove(zfile.name))
@@ -298,9 +321,11 @@ def test_download_meta() -> PlainTextResponse:
     if len(recent_videos) == 0:
         return PlainTextResponse("", status_code=404)
     video = recent_videos[0]
-    with open(video.uri_meta, encoding="utf-8", mode="r") as f:
-        out = f.read()
-    return PlainTextResponse(out, media_type="application/json")
+    content_or_exception = filestore.fetch(video.uri_meta)
+    if isinstance(content_or_exception, Exception):
+        return PlainTextResponse(str(content_or_exception), status_code=500)
+    content = content_or_exception.decode("utf-8")
+    return PlainTextResponse(content, media_type="application/json")
 
 
 @app.get("/test/download/log", tags=["test"])
@@ -336,11 +361,12 @@ def is_client_registered(
     return JSONResponse({"is_registered": db_is_token_valid(x_client_token)})
 
 
-def get_path(uid: str) -> str:
+def get_path(uid: str) -> ResourcePath:
     """Returns the path to the upload dir for the given uid."""
-    out = os.path.join(UPLOAD_DIR, uid)
-    os.makedirs(out, exist_ok=True)
-    return out
+    localpath = os.path.join(UPLOAD_DIR, uid)
+    os.makedirs(localpath, exist_ok=True)
+    s3_path = f"{S3_UPLOAD_DIR}/{uid}"
+    return ResourcePath(localpath, s3_path)
 
 
 @app.post("/v1/upload/log", tags=["client"])
@@ -384,10 +410,11 @@ async def upload(
     user = db_get_user_from_token(x_client_token)
     if user is None:
         return PlainTextResponse("Invalid client registration", status_code=401)
-    upload_dir = get_path(user.uid)
-    log.info("Upload dir: %s", upload_dir)
+    # upload_dir = get_path(user.uid)
+    upload_resource = get_path(user.uid)
+    log.info("Upload dir: %s", upload_resource.localpath)
     vidfilename = vidfile.filename
-    vidfile_path = os.path.join(upload_dir, vidfilename)
+    vidfile_path = os.path.join(upload_resource.localpath, vidfilename)
     metafile_path = os.path.splitext(vidfile_path)[0] + ".json"
     try:
         metadatastr = await async_readutf8(metadata, close=False)
@@ -411,6 +438,18 @@ async def upload(
         await async_download(vidfile, vidfile_path, close=True)
         await vidfile.close()
         log.info("Video file: %s", vidfile_path)
+        if USE_S3_STORAGE:
+            # TODO: move this to filestore.py
+            s3_vidpath = upload_resource.s3_path + "/" + vidfilename
+            s3_metapath = (
+                upload_resource.s3_path + "/" + os.path.basename(metafile_path)
+            )
+            await async_s3_upload(vidfile_path, s3_vidpath)
+            await async_s3_upload(vidfile_path, s3_metapath)
+            await async_os_remove(vidfile_path)
+            await async_os_remove(metafile_path)
+            vidfile_path = s3_vidpath
+            metafile_path = s3_metapath
         db_register_upload(
             uid=user.uid,
             uri_video=vidfile_path,
@@ -433,7 +472,7 @@ async def upload(
 async def test_upload(
     datafile: UploadFile = File(...),
 ) -> PlainTextResponse:
-    """TODO - Add description."""
+    """Test upload endpoint."""
     log.info("/test/upload with file: %s", datafile.filename)
     if datafile.filename is None:
         return PlainTextResponse("invalid filename", status_code=400)
@@ -441,7 +480,9 @@ async def test_upload(
         temp_datapath: str = os.path.join(temp_dir, datafile.filename)
         await async_download(datafile, temp_datapath)
         log.info("Download test file %s to %s", datafile.filename, temp_datapath)
-    return PlainTextResponse(f"Uploaded {datafile.filename} to {temp_datapath}")
+    return PlainTextResponse(
+        f"Uploaded {datafile.filename} to {temp_datapath}, but was deleted after response."
+    )
 
 
 @app.get("/v1/list/uids", tags=["admin"])
@@ -503,7 +544,9 @@ def download_video(vid_id: int, x_api_admin_key: str = ApiKeyHeader) -> FileResp
     vid_info: VideoItem | None = db_get_video(vid_id)
     if vid_info is None:
         return FileResponse("", status_code=404)
-    return FileResponse(vid_info.uri_video, media_type="video/mp4")
+    return filestore.create_download_response(
+        vid_info.uri_video, media_type="video/mp4", filename="video.mp4"
+    )
 
 
 @app.get("/v1/download/meta/{vid_id}", tags=["admin"])
@@ -514,8 +557,10 @@ def download_meta(vid_id: int, x_api_admin_key: str = ApiKeyHeader) -> JSONRespo
     vid_info: VideoItem | None = db_get_video(vid_id)
     if vid_info is None:
         return JSONResponse({"error": "Invalid id"}, status_code=404)
-    with open(vid_info.uri_meta, encoding="utf-8", mode="r") as meta_file:
-        meta_json = json.load(meta_file)
+    content_or_exception = filestore.fetch(vid_info.uri_meta)
+    if isinstance(content_or_exception, Exception):
+        return JSONResponse({"error": str(content_or_exception)}, status_code=500)
+    meta_json = json.loads(content_or_exception.decode("utf-8"))
     return JSONResponse(meta_json)
 
 
