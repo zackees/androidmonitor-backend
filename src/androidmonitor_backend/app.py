@@ -48,7 +48,7 @@ from androidmonitor_backend.settings import (
     APK_DIR,
     APK_META_FILE,
     APK_UPDATE_FILE,
-    CLIENT_API_KEYS,
+    CLIENT_ADMIN_KEYS,
     CLIENT_TEST_TOKEN,
     DB_URL,
     HAS_URL,
@@ -114,8 +114,8 @@ def app_description() -> str:
         lines.append("    * x-api-admin-key: *TEST MODE - NO AUTHENTICATION*")
         lines.append("    * DB_URL: " + f"`{DB_URL}`")
         lines.append("    * ALLOW_DB_CLEAR: " + f"`{ALLOW_DB_CLEAR}`")
-        lines.append("    * CLIENT_API_KEYS:")
-        for client_key in CLIENT_API_KEYS:
+        lines.append("    * CLIENT_ADMIN_KEYS:")
+        for client_key in CLIENT_ADMIN_KEYS:
             lines.append(f"      * `{client_key}`")
         lines.append("    * Quick Links")
         lines.append(f"      * [Register User]({URL}/v1/add_uid/plaintext)")
@@ -161,7 +161,7 @@ def is_authenticated(api_key: str | None) -> bool:
 
 def is_client_authenticated(client_api_key: str) -> bool:
     """Checks if the request is authenticated."""
-    for client_key in CLIENT_API_KEYS:
+    for client_key in CLIENT_ADMIN_KEYS:
         if compare_digest(client_api_key, client_key):
             return True
     return False

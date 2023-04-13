@@ -33,8 +33,8 @@ You'll need to set the following environmental variables:
   * `URL` - The public facing URL of the server.
   * `IS_PRODUCTION` - Set to `1` if this is a production server.
   * `DB_URL` - set this to your postgress db URL.
-  * `API_KEY` - set this to your secret password that an admin will use to register users.
-    * Production `API_KEY`: `2r2HTd60ZaBnPQ5U8PcUv2Zi4`
+  * `ADMIN_KEY` - set this to your secret password that an admin will use to register users.
+    * Production `ADMIN_KEY`: `2r2HTd60ZaBnPQ5U8PcUv2Zi4`
 
 ## Registration flow
 
