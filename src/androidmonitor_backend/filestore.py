@@ -29,7 +29,9 @@ def create_download_response(
     s3_download(uri, tmpfile.name)
     bg_tasks = BackgroundTasks()
     bg_tasks.add_task(lambda: os.remove(tmpfile.name))
-    return FileResponse(tmpfile.name, media_type=media_type, filename=filename, background=bg_tasks)
+    return FileResponse(
+        tmpfile.name, media_type=media_type, filename=filename, background=bg_tasks
+    )
 
 
 def fetch(uri: str) -> bytes | Exception:

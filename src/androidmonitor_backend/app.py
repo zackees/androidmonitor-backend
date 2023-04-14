@@ -2,7 +2,7 @@
     app worker
 """
 
-# pylint: disable=redefined-builtin,consider-using-with
+# pylint: disable=redefined-builtin,consider-using-with,import-outside-toplevel
 
 import json
 import os
@@ -601,20 +601,16 @@ if ALLOW_DB_CLEAR:
 
 def main() -> None:
     """Start the app."""
-    import subprocess  # pylint: disable=import-outside-toplevel
-    import webbrowser  # pylint: disable=import-outside-toplevel
+    import threading
+    import webbrowser
 
-    with subprocess.Popen(
-        ["supervisord", "-c", "supervisord.conf"],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        cwd=PROJECT_ROOT,
-    ):
-        port = 8080
-        webbrowser.open(f"http://localhost:{port}")
-        uvicorn.run(
-            "androidmonitor_backend.app:app", host="localhost", port=port, reload=True
-        )
+    from androidmonitor_backend import background
+
+    thread = threading.Thread(target=background.main, daemon=True)
+    thread.start()
+    port = 8080
+    webbrowser.open(f"http://localhost:{port}")
+    uvicorn.run(app, host="localhost", port=port)
 
 
 if __name__ == "__main__":
