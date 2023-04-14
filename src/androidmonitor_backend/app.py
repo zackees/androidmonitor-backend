@@ -269,7 +269,7 @@ def test_download_video() -> FileResponse:
         return FileResponse("", status_code=404)
     video = recent_videos[0]
     fileresp: FileResponse = filestore.create_download_response(
-        video.uri_video, media_type="application/octet-stream", filename="video.mp4"
+        video.uri_video, media_type="media/video", filename="video.mp4"
     )
     return fileresp
 
