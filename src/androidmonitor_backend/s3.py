@@ -28,6 +28,7 @@ def s3_list(s3_prefix: str = "") -> list[str] | Exception:
         list[str] | Exception: Returns a list of object keys if successful,
         otherwise returns the exception.
     """
+    s3_prefix = s3_prefix.replace("s3://", "")
     s3 = boto3.client(
         "s3", aws_access_key_id=AWS_ACCESS_KEY, aws_secret_access_key=AWS_SECRET_KEY
     )
@@ -53,6 +54,7 @@ def s3_download(s3_object_key: str, local_file_path: str) -> Exception | None:
     Returns:
         Exception | None: Returns the exception if an error occurred, otherwise returns None.
     """
+    s3_object_key = s3_object_key.replace("s3://", "")
     s3 = boto3.client(
         "s3", aws_access_key_id=AWS_ACCESS_KEY, aws_secret_access_key=AWS_SECRET_KEY
     )
@@ -77,6 +79,7 @@ def s3_fetch_utf8(s3_object_key: str) -> str | Exception:
         bytes | Exception: Returns the file content as bytes if successful,
         otherwise returns the exception.
     """
+    s3_object_key = s3_object_key.replace("s3://", "")
     out = s3_fetch(s3_object_key)
     if isinstance(out, Exception):
         return out
@@ -94,6 +97,7 @@ def s3_fetch(s3_object_key: str) -> bytes | Exception:
         bytes | Exception: Returns the file content as bytes if successful,
         otherwise returns the exception.
     """
+    s3_object_key = s3_object_key.replace("s3://", "")
     s3 = boto3.client(
         "s3", aws_access_key_id=AWS_ACCESS_KEY, aws_secret_access_key=AWS_SECRET_KEY
     )
@@ -127,6 +131,7 @@ def s3_upload(local_file_path: str, s3_object_key: str) -> Exception | None:
         Exception | None: Returns None if the file is successfully uploaded,
         otherwise returns the exception.
     """
+    s3_object_key = s3_object_key.replace("s3://", "")
     s3 = boto3.client(
         "s3", aws_access_key_id=AWS_ACCESS_KEY, aws_secret_access_key=AWS_SECRET_KEY
     )
@@ -163,6 +168,7 @@ def s3_remove(s3_object_key: str) -> Exception | None:
         Exception | None: Returns None if the file is successfully deleted,
         otherwise returns the exception.
     """
+    s3_object_key = s3_object_key.replace("s3://", "")
     s3 = boto3.client(
         "s3", aws_access_key_id=AWS_ACCESS_KEY, aws_secret_access_key=AWS_SECRET_KEY
     )
