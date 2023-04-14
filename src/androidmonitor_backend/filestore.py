@@ -21,7 +21,7 @@ def create_download_response(
     """Create a FileResponse for the given uri. Either s3:// or a local file path."""
     filename = filename or os.path.basename(uri)
     if not is_s3(uri):
-        return FileResponse(uri, media_type=media_type)
+        return FileResponse(uri, media_type=media_type, filename=filename)
     tmpfile = tempfile.NamedTemporaryFile(  # pylint: disable=consider-using-with
         delete=False
     )
@@ -29,7 +29,7 @@ def create_download_response(
     s3_download(uri, tmpfile.name)
     bg_tasks = BackgroundTasks()
     bg_tasks.add_task(lambda: os.remove(tmpfile.name))
-    return FileResponse(filename, media_type=media_type, background=bg_tasks)
+    return FileResponse(tmpfile.name, media_type=media_type, filename=filename, background=bg_tasks)
 
 
 def fetch(uri: str) -> bytes | Exception:

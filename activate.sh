@@ -9,7 +9,7 @@ function abs_path {
   (cd "$(dirname '$1')" &>/dev/null && printf "%s/%s" "$PWD" "${1##*/}")
 }
 # if python is not python3, then make it
-if [ "$(python --version 2>&1)" != "Python 3" ]; then
+if [ "$(python --version 2>&1)" != "Python 3"* ]; then
   alias python=python3
   alias pip=pip3
 fi

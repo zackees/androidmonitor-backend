@@ -268,8 +268,8 @@ def test_download_video() -> FileResponse:
     if len(recent_videos) == 0:
         return FileResponse("", status_code=404)
     video = recent_videos[0]
-    fileresp = filestore.create_download_response(
-        video.uri_video, media_type="video/mp4", filename="video.mp4"
+    fileresp: FileResponse = filestore.create_download_response(
+        video.uri_video, media_type="application/octet-stream", filename="video.mp4"
     )
     return fileresp
 
