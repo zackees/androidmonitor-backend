@@ -224,14 +224,19 @@ def db_get_user_from_uid(uid: str) -> Row[Any] | None:
 
 def db_get_recent(limit=10) -> Sequence[Row[Any]]:
     """Get the uids."""
+    return db_get_users(limit=limit)
+
+
+def db_get_users(
+    uidlist: list[str] | None = None, limit: int = 100
+) -> Sequence[Row[Any]]:
+    """Get the users."""
     db_init_once()
     with Session() as session:
-        select = (
-            user_table.select()
-            .where()
-            .order_by(user_table.c.created.desc())
-            .limit(limit)
-        )
+        select = user_table.select()
+        if uidlist is not None:
+            select = select.where(user_table.c.uid.in_(uidlist))
+        select = select.order_by(user_table.c.created.desc()).limit(limit)
         result = session.execute(select)
         rows = result.fetchall()
         return rows
