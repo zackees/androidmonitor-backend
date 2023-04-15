@@ -2,7 +2,7 @@
 Database.
 """
 
-# pylint: disable=redefined-builtin
+# pylint: disable=redefined-builtin,line-too-long
 
 import random
 import secrets
@@ -408,7 +408,10 @@ def db_try_register(uid: str) -> tuple[bool, str]:
 
 
 def db_get_uploads(
-    uid: str, start: datetime | None = None, end: datetime | None = None
+    uid: str,
+    start: datetime | None = None,
+    end: datetime | None = None,
+    appname: str | None = None,
 ) -> Sequence[Row[Any]]:
     """Get the uids."""
     db_init_once()
@@ -418,6 +421,8 @@ def db_get_uploads(
             select = select.where(vid_table.c.created >= start)
         if end is not None:
             select = select.where(vid_table.c.created <= end)
+        if appname is not None:
+            select = select.where(vid_table.c.appname == appname)
         select = select.order_by(vid_table.c.created.desc())
         result = session.execute(select)
         rows = result.fetchall()

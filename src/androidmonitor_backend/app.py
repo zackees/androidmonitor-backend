@@ -526,13 +526,19 @@ def log_file(
     return JSONResponse(out)
 
 
-@app.get("/v1/list/uploads/{uid}", tags=["operator"])
-def list_uid_uploads(uid: str, x_api_admin_key: str = ApiKeyHeader) -> JSONResponse:
+@app.post("/v1/list/uploads", tags=["operator"])
+def list_uid_uploads(
+    uid: str,
+    x_api_admin_key: str = ApiKeyHeader,
+    start: datetime | None = None,
+    end: datetime | None = None,
+    appname: str | None = None,
+) -> JSONResponse:
     """Get's all uploads from the user with the given uid."""
     if not is_operator_authenticated(x_api_admin_key):
         return JSONResponse({"error": "Invalid API key"}, status_code=401)
     uid = uid.replace("-", "")
-    rows = db_get_uploads(uid)
+    rows = db_get_uploads(uid, start, end, appname)
     out = []
     for row in rows:
         item = {
