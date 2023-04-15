@@ -239,6 +239,14 @@ async def info() -> PlainTextResponse:
     return PlainTextResponse("\n".join(lines))
 
 
+@app.get("/v1/logged_in", tags=["admin"])
+async def logged_in(x_api_admin_key: str = ApiKeyHeader) -> JSONResponse:
+    """Test if logged in using the admin key."""
+    if not is_authenticated(x_api_admin_key):
+        return JSONResponse({"error": "Invalid API key"}, status_code=401)
+    return JSONResponse({"ok": True})
+
+
 @app.get("/v1/add_uid", tags=["admin"])
 def add_uid(x_api_admin_key: str = ApiKeyHeader) -> JSONResponse:
     """TODO - Add description."""
