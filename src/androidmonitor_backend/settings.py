@@ -43,6 +43,7 @@ if DB_URL.startswith("postgres://"):
         "postgres://", "postgresql://", 1
     )  # Fix prefix for sqlalchemy
 API_ADMIN_KEY = os.getenv("ADMIN_KEY", "test")
+API_OPERATOR_KEY = os.getenv("OPERATOR_KEY", "test")
 assert IS_TEST or (API_ADMIN_KEY != "test"), "ADMIN_KEY must be set in production"
 CLIENT_API_KEYS = frozenset(
     [

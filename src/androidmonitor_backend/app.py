@@ -49,6 +49,7 @@ from androidmonitor_backend.s3 import async_s3_upload
 from androidmonitor_backend.settings import (
     ALLOW_DB_CLEAR,
     API_ADMIN_KEY,
+    API_OPERATOR_KEY,
     APK_DIR,
     APK_META_FILE,
     APK_UPDATE_FILE,
@@ -161,16 +162,26 @@ else:
     ApiKeyHeader = Header(...)
 
 
-def is_authenticated(api_key: str | None) -> bool:
+def is_authenticated(api_key: str | None, api_key_match) -> bool:
     """Checks if the request is authenticated."""
     if IS_TEST:
         return True
     if api_key is None:
         return False
-    out = compare_digest(api_key, API_ADMIN_KEY)
+    out = compare_digest(api_key, api_key_match)
     if not out:
         log.warning("Invalid API key attempted: %s", api_key)
     return out
+
+
+def is_admin_authenticated(api_key: str | None) -> bool:
+    """Checks if the request is authenticated."""
+    return is_authenticated(api_key, API_ADMIN_KEY)
+
+
+def is_operator_authenticated(api_key: str | None) -> bool:
+    """Checks if the request is authenticated."""
+    return is_authenticated(api_key, API_OPERATOR_KEY)
 
 
 def is_client_authenticated(client_api_key: str) -> bool:
@@ -239,10 +250,10 @@ async def info() -> PlainTextResponse:
     return PlainTextResponse("\n".join(lines))
 
 
-@app.get("/v1/admin/logged_in", tags=["admin"])
-async def logged_in(x_api_admin_key: str = ApiKeyHeader) -> JSONResponse:
+@app.get("/v1/operator/logged_in", tags=["admin"])
+async def logged_in(x_api_key: str = ApiKeyHeader) -> JSONResponse:
     """Test if logged in using the admin key."""
-    if not is_authenticated(x_api_admin_key):
+    if not is_admin_authenticated(x_api_key) or is_operator_authenticated(x_api_key):
         return JSONResponse({"ok": False, "error": "Invalid API key"}, status_code=401)
     return JSONResponse({"ok": True})
 
@@ -250,7 +261,7 @@ async def logged_in(x_api_admin_key: str = ApiKeyHeader) -> JSONResponse:
 @app.get("/v1/add_uid", tags=["admin"])
 def add_uid(x_api_admin_key: str = ApiKeyHeader) -> JSONResponse:
     """TODO - Add description."""
-    if not is_authenticated(x_api_admin_key):
+    if not is_admin_authenticated(x_api_admin_key):
         return JSONResponse({"error": "Invalid API key"}, status_code=401)
     ok, uid, created = db_add_uid()
     return JSONResponse({"ok": ok, "uid": uid, "created": created})
@@ -259,7 +270,7 @@ def add_uid(x_api_admin_key: str = ApiKeyHeader) -> JSONResponse:
 @app.get("/v1/add_uid/plaintext", tags=["admin"])
 def add_uid_plaintext(x_api_admin_key: str = ApiKeyHeader) -> PlainTextResponse:
     """Returns the uid in plaintext."""
-    if not is_authenticated(x_api_admin_key):
+    if not is_admin_authenticated(x_api_admin_key):
         return PlainTextResponse('"error": "Invalid API key"', status_code=401)
     ok, uid, _ = db_add_uid()
     out: str = f"ok: {ok}\nuid: {uid}"
@@ -498,7 +509,7 @@ def log_file(
     x_api_admin_key: str = ApiKeyHeader,
 ) -> JSONResponse:
     """List all uids"""
-    if not is_authenticated(x_api_admin_key):
+    if not is_admin_authenticated(x_api_admin_key):
         return JSONResponse({"error": "Invalid API key"}, status_code=401)
     rows = db_get_recent()
     # convert to json
@@ -512,7 +523,7 @@ def log_file(
 @app.get("/v1/list/uploads/{uid}", tags=["admin"])
 def list_uid_uploads(uid: str, x_api_admin_key: str = ApiKeyHeader) -> JSONResponse:
     """Get's all uploads from the user with the given uid."""
-    if not is_authenticated(x_api_admin_key):
+    if not is_admin_authenticated(x_api_admin_key):
         return JSONResponse({"error": "Invalid API key"}, status_code=401)
     uid = uid.replace("-", "")
     rows = db_get_uploads(uid)
@@ -531,7 +542,7 @@ def list_uid_uploads(uid: str, x_api_admin_key: str = ApiKeyHeader) -> JSONRespo
 @app.get("/v1/list/logs/{uid}", tags=["admin"])
 def list_uid_logs(uid: str, x_api_admin_key: str = ApiKeyHeader) -> JSONResponse:
     """Lists all the logs gathered from the user with the given uid."""
-    if not is_authenticated(x_api_admin_key):
+    if not is_admin_authenticated(x_api_admin_key):
         return JSONResponse({"error": "Invalid API key"}, status_code=401)
     uid = uid.replace("-", "")
     rows: list[tuple[int, datetime]] = db_list_logs(uid)
@@ -547,7 +558,7 @@ def list_uid_logs(uid: str, x_api_admin_key: str = ApiKeyHeader) -> JSONResponse
 @app.get("/v1/download/video/{vid_id}", tags=["admin"])
 def download_video(vid_id: int, x_api_admin_key: str = ApiKeyHeader) -> FileResponse:
     """Download video file via id"""
-    if not is_authenticated(x_api_admin_key):
+    if not is_admin_authenticated(x_api_admin_key):
         return FileResponse("", status_code=401)
     vid_info: VideoItem | None = db_get_video(vid_id)
     if vid_info is None:
@@ -560,7 +571,7 @@ def download_video(vid_id: int, x_api_admin_key: str = ApiKeyHeader) -> FileResp
 @app.get("/v1/download/meta/{vid_id}", tags=["admin"])
 def download_meta(vid_id: int, x_api_admin_key: str = ApiKeyHeader) -> JSONResponse:
     """Download meta file via id"""
-    if not is_authenticated(x_api_admin_key):
+    if not is_admin_authenticated(x_api_admin_key):
         return JSONResponse({"error": "Invalid API key"}, status_code=401)
     vid_info: VideoItem | None = db_get_video(vid_id)
     if vid_info is None:
@@ -575,7 +586,7 @@ def download_meta(vid_id: int, x_api_admin_key: str = ApiKeyHeader) -> JSONRespo
 @app.get("/v1/download/log/{log_id}", tags=["admin"])
 def download_log(log_id: int, x_api_admin_key: str = ApiKeyHeader) -> PlainTextResponse:
     """Download log file via id"""
-    if not is_authenticated(x_api_admin_key):
+    if not is_admin_authenticated(x_api_admin_key):
         return PlainTextResponse("Invalid API key", status_code=401)
     log_str = db_get_log(log_id)
     if log_str is None:
@@ -587,7 +598,7 @@ def download_log(log_id: int, x_api_admin_key: str = ApiKeyHeader) -> PlainTextR
 @app.get("/log", tags=["admin"])
 def getlog(x_api_admin_key: str = ApiKeyHeader) -> PlainTextResponse:
     """Gets the log file."""
-    if not is_authenticated(x_api_admin_key):
+    if not is_admin_authenticated(x_api_admin_key):
         return PlainTextResponse("Invalid API key", status_code=401)
     out = get_log_reversed(100).strip()
     if not out:
@@ -600,7 +611,7 @@ if ALLOW_DB_CLEAR:
     @app.delete("/clear", tags=["admin"])
     async def clear(x_api_admin_key: str = ApiKeyHeader) -> PlainTextResponse:
         """TODO - Add description."""
-        if not is_authenticated(x_api_admin_key):
+        if not is_admin_authenticated(x_api_admin_key):
             return PlainTextResponse("Invalid API key", status_code=401)
         log.critical("Clear called")
         db_clear()
