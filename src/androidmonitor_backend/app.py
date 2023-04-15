@@ -84,6 +84,10 @@ tags_metadata = [
         "description": "Admin control of registering clients",
     },
     {
+        "name": "operator",
+        "description": "Operator control of using the api",
+    },
+    {
         "name": "client",
         "description": "Client api",
     },
@@ -250,7 +254,7 @@ async def info() -> PlainTextResponse:
     return PlainTextResponse("\n".join(lines))
 
 
-@app.get("/v1/operator/logged_in", tags=["admin"])
+@app.get("/v1/operator/logged_in", tags=["operator"])
 async def logged_in(x_api_key: str = ApiKeyHeader) -> JSONResponse:
     """Test if logged in using the admin key."""
     if not is_admin_authenticated(x_api_key) or is_operator_authenticated(x_api_key):
