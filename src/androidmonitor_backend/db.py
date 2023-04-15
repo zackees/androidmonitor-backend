@@ -228,7 +228,10 @@ def db_get_recent(limit=10) -> Sequence[Row[Any]]:
 
 
 def db_get_users(
-    uidlist: list[str] | None = None, limit: int = 100
+    uidlist: list[str] | None = None,
+    limit: int = 100,
+    start: datetime | None = None,
+    end: datetime | None = None,
 ) -> Sequence[Row[Any]]:
     """Get the users."""
     db_init_once()
@@ -236,6 +239,10 @@ def db_get_users(
         select = user_table.select()
         if uidlist is not None:
             select = select.where(user_table.c.uid.in_(uidlist))
+        if start is not None:
+            select = select.where(user_table.c.created >= start)
+        if end is not None:
+            select = select.where(user_table.c.created <= end)
         select = select.order_by(user_table.c.created.desc()).limit(limit)
         result = session.execute(select)
         rows = result.fetchall()

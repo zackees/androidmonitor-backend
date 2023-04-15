@@ -33,11 +33,11 @@ from androidmonitor_backend.db import (
     db_add_uid,
     db_clear,
     db_get_log,
-    db_get_users,
     db_get_recent_logs_ids,
     db_get_recent_videos,
     db_get_uploads,
     db_get_user_from_token,
+    db_get_users,
     db_get_video,
     db_is_token_valid,
     db_list_logs,
@@ -511,13 +511,15 @@ async def test_upload(
 
 
 @app.get("/v1/list/uids", tags=["operator"])
-def log_file(
+def list_uids(
     x_api_admin_key: str = ApiKeyHeader,
+    start: datetime | None = None,
+    end: datetime | None = None,
 ) -> JSONResponse:
     """List all uids"""
     if not is_operator_authenticated(x_api_admin_key):
         return JSONResponse({"error": "Invalid API key"}, status_code=401)
-    rows = db_get_users()
+    rows = db_get_users(start=start, end=end)
     # convert to json
     out = []
     for row in rows:
