@@ -408,22 +408,28 @@ def db_try_register(uid: str) -> tuple[bool, str]:
 
 
 def db_get_uploads(
-    uid: str,
+    uid: str | None = None,
     start: datetime | None = None,
     end: datetime | None = None,
     appname: str | None = None,
+    count: int | None = None,
 ) -> Sequence[Row[Any]]:
     """Get the uids."""
     db_init_once()
     with Session() as session:
-        select = vid_table.select().where(vid_table.c.user_uid == uid)
+        select = vid_table.select()
+
+        if uid is not None:
+            select = select.where(vid_table.c.user_uid == uid)
         if start is not None:
-            select = select.where(vid_table.c.created >= start)
+            select = select.where(vid_table.c.start >= start)
         if end is not None:
-            select = select.where(vid_table.c.created <= end)
+            select = select.where(vid_table.c.end <= end)
         if appname is not None:
             select = select.where(vid_table.c.appname == appname)
-        select = select.order_by(vid_table.c.created.desc())
+        select = select.order_by(vid_table.c.start.desc())
+        if count is not None:
+            select = select.limit(count)
         result = session.execute(select)
         rows = result.fetchall()
         return rows
