@@ -254,7 +254,7 @@ async def info() -> PlainTextResponse:
     return PlainTextResponse("\n".join(lines))
 
 
-@app.get("/v1/operator/logged_in", tags=["operator"])
+@app.get("/v1/logged_in/operator", tags=["operator"])
 async def logged_in(x_api_key: str = ApiKeyHeader) -> JSONResponse:
     """Test if logged in using the admin key."""
     if not is_admin_authenticated(x_api_key) or is_operator_authenticated(x_api_key):
@@ -508,7 +508,7 @@ async def test_upload(
     )
 
 
-@app.get("/v1/list/uids", tags=["admin"])
+@app.get("/v1/list/uids", tags=["operator"])
 def log_file(
     x_api_admin_key: str = ApiKeyHeader,
 ) -> JSONResponse:
@@ -524,7 +524,7 @@ def log_file(
     return JSONResponse(out)
 
 
-@app.get("/v1/list/uploads/{uid}", tags=["admin"])
+@app.get("/v1/list/uploads/{uid}", tags=["operator"])
 def list_uid_uploads(uid: str, x_api_admin_key: str = ApiKeyHeader) -> JSONResponse:
     """Get's all uploads from the user with the given uid."""
     if not is_admin_authenticated(x_api_admin_key):
