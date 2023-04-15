@@ -407,15 +407,18 @@ def db_try_register(uid: str) -> tuple[bool, str]:
         return True, token128
 
 
-def db_get_uploads(uid: str) -> Sequence[Row[Any]]:
+def db_get_uploads(
+    uid: str, start: datetime | None = None, end: datetime | None = None
+) -> Sequence[Row[Any]]:
     """Get the uids."""
     db_init_once()
     with Session() as session:
-        select = (
-            vid_table.select()
-            .where(vid_table.c.user_uid == uid)
-            .order_by(vid_table.c.created.desc())
-        )
+        select = vid_table.select().where(vid_table.c.user_uid == uid)
+        if start is not None:
+            select = select.where(vid_table.c.created >= start)
+        if end is not None:
+            select = select.where(vid_table.c.created <= end)
+        select = select.order_by(vid_table.c.created.desc())
         result = session.execute(select)
         rows = result.fetchall()
         return rows

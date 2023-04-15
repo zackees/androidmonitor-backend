@@ -185,7 +185,9 @@ def is_admin_authenticated(api_key: str | None) -> bool:
 
 def is_operator_authenticated(api_key: str | None) -> bool:
     """Checks if the request is authenticated."""
-    return is_authenticated(api_key, API_OPERATOR_KEY)
+    return is_authenticated(api_key, API_OPERATOR_KEY) or is_admin_authenticated(
+        api_key
+    )
 
 
 def is_client_authenticated(client_api_key: str) -> bool:
@@ -257,7 +259,7 @@ async def info() -> PlainTextResponse:
 @app.get("/v1/logged_in/operator", tags=["operator"])
 async def logged_in(x_api_key: str = ApiKeyHeader) -> JSONResponse:
     """Test if logged in using the admin key."""
-    if not is_admin_authenticated(x_api_key) or is_operator_authenticated(x_api_key):
+    if not is_operator_authenticated(x_api_key):
         return JSONResponse({"ok": False, "error": "Invalid API key"}, status_code=401)
     return JSONResponse({"ok": True})
 
@@ -513,7 +515,7 @@ def log_file(
     x_api_admin_key: str = ApiKeyHeader,
 ) -> JSONResponse:
     """List all uids"""
-    if not is_admin_authenticated(x_api_admin_key):
+    if not is_operator_authenticated(x_api_admin_key):
         return JSONResponse({"error": "Invalid API key"}, status_code=401)
     rows = db_get_recent()
     # convert to json
@@ -527,7 +529,7 @@ def log_file(
 @app.get("/v1/list/uploads/{uid}", tags=["operator"])
 def list_uid_uploads(uid: str, x_api_admin_key: str = ApiKeyHeader) -> JSONResponse:
     """Get's all uploads from the user with the given uid."""
-    if not is_admin_authenticated(x_api_admin_key):
+    if not is_operator_authenticated(x_api_admin_key):
         return JSONResponse({"error": "Invalid API key"}, status_code=401)
     uid = uid.replace("-", "")
     rows = db_get_uploads(uid)
@@ -536,8 +538,9 @@ def list_uid_uploads(uid: str, x_api_admin_key: str = ApiKeyHeader) -> JSONRespo
         item = {
             "id": row.id,
             "uri_video": row.uri_video,
-            "uri_meta": row.uri_meta,
-            "created": row.created.isoformat(),
+            "appname": row.appname,
+            "start": row.start.isoformat(),
+            "end": row.end.isoformat(),
         }
         out.append(item)
     return JSONResponse(out)
