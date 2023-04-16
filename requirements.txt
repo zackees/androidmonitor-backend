@@ -13,4 +13,5 @@ Jinja2
 supervisor
 requests
 python-dateutil
+pydantic
 boto3  # AWS S3

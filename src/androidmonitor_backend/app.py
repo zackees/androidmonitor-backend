@@ -2,7 +2,7 @@
     app worker
 """
 
-# pylint: disable=redefined-builtin,consider-using-with,import-outside-toplevel
+# pylint: disable=redefined-builtin,consider-using-with,import-outside-toplevel,too-few-public-methods
 
 import json
 import os
@@ -16,7 +16,7 @@ from zipfile import ZipFile
 import colorama  # pylint: disable=no-name-in-module
 import uvicorn  # type: ignore
 from fastapi import Form  # type: ignore
-from fastapi import BackgroundTasks, FastAPI, File, Header, UploadFile
+from fastapi import BackgroundTasks, Body, FastAPI, File, Header, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import (
     FileResponse,
@@ -25,6 +25,7 @@ from fastapi.responses import (
     RedirectResponse,
 )
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel  # pylint: disable=no-name-in-module
 
 from androidmonitor_backend import filestore
 from androidmonitor_backend.db import (
@@ -528,21 +529,33 @@ def list_uids(
     return JSONResponse(out)
 
 
+class UploadFilter(BaseModel):
+    """Filter for uploads."""
+
+    uid: str = Body(None)
+    start: datetime = Body(None)
+    end: datetime = Body(None)
+    appname: str = Body(None)
+    count: int = Body(None)
+
+
 @app.post("/v1/list/uploads", tags=["operator"])
 def list_uid_uploads(
-    uid: str | None = None,
     x_api_admin_key: str = ApiKeyHeader,
-    start: datetime | None = None,
-    end: datetime | None = None,
-    appname: str | None = None,
-    count: int | None = None,
+    upload_filter: UploadFilter = Body(...),
 ) -> JSONResponse:
     """Get's all uploads from the user with the given uid."""
     if not is_operator_authenticated(x_api_admin_key):
         return JSONResponse({"error": "Invalid API key"}, status_code=401)
-    if uid is not None:
-        uid = uid.replace("-", "")
-    rows = db_get_uploads(uid, start, end, appname, count)
+    if upload_filter.uid is not None:
+        upload_filter.uid = upload_filter.uid.replace("-", "")
+    rows = db_get_uploads(
+        upload_filter.uid,
+        upload_filter.start,
+        upload_filter.end,
+        upload_filter.appname,
+        upload_filter.count,
+    )
     out = []
     for row in rows:
         item = {

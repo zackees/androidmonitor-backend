@@ -430,7 +430,6 @@ def db_get_uploads(
     db_init_once()
     with Session() as session:
         select = vid_table.select()
-
         if uid is not None:
             select = select.where(vid_table.c.user_uid == uid)
         if start is not None:
