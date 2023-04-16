@@ -514,15 +514,16 @@ async def test_upload(
 class ListUidsParams(BaseModel):
     """Parameters for listing uids."""
 
-    x_api_admin_key: str
     start: datetime | None = None
     end: datetime | None = None
 
 
 @app.post("/v1/list/uids", tags=["operator"])
-def list_uids(params: ListUidsParams = Body(...)) -> JSONResponse:
+def list_uids(
+    x_api_admin_key: str = ApiKeyHeader,
+    params: ListUidsParams = Body(...)) -> JSONResponse:
     """List all uids"""
-    if not is_operator_authenticated(params.x_api_admin_key):
+    if not is_operator_authenticated(x_api_admin_key):
         return JSONResponse({"error": "Invalid API key"}, status_code=401)
     rows = db_get_users(start=params.start, end=params.end)
     # convert to json
