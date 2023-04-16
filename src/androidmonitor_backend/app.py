@@ -520,8 +520,8 @@ class ListUidsParams(BaseModel):
 
 @app.post("/v1/list/uids", tags=["operator"])
 def list_uids(
-    x_api_admin_key: str = ApiKeyHeader,
-    params: ListUidsParams = Body(...)) -> JSONResponse:
+    x_api_admin_key: str = ApiKeyHeader, params: ListUidsParams = Body(...)
+) -> JSONResponse:
     """List all uids"""
     if not is_operator_authenticated(x_api_admin_key):
         return JSONResponse({"error": "Invalid API key"}, status_code=401)
