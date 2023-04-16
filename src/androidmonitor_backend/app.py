@@ -511,16 +511,20 @@ async def test_upload(
     )
 
 
-@app.get("/v1/list/uids", tags=["operator"])
-def list_uids(
-    x_api_admin_key: str = ApiKeyHeader,
-    start: datetime | None = None,
-    end: datetime | None = None,
-) -> JSONResponse:
+class ListUidsParams(BaseModel):
+    """Parameters for listing uids."""
+
+    x_api_admin_key: str
+    start: datetime | None = None
+    end: datetime | None = None
+
+
+@app.post("/v1/list/uids", tags=["operator"])
+def list_uids(params: ListUidsParams = Body(...)) -> JSONResponse:
     """List all uids"""
-    if not is_operator_authenticated(x_api_admin_key):
+    if not is_operator_authenticated(params.x_api_admin_key):
         return JSONResponse({"error": "Invalid API key"}, status_code=401)
-    rows = db_get_users(start=start, end=end)
+    rows = db_get_users(start=params.start, end=params.end)
     # convert to json
     out = []
     for row in rows:
@@ -554,7 +558,7 @@ def list_uid_uploads(
         upload_filter.start,
         upload_filter.end,
         upload_filter.appname,
-        upload_filter.count,
+        upload_filter.count | 100,
     )
     out = []
     for row in rows:
