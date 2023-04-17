@@ -408,7 +408,7 @@ def client_settings(
     out = {
         "filter_apps": False,
     }
-    return JSONResponse({"ok": True, "settings": out})
+    return JSONResponse(out)
 
 
 def get_path(uid: str) -> ResourcePath:
