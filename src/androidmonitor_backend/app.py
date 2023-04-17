@@ -400,7 +400,9 @@ def client_settings(
     settings: ClientSettings, x_client_token: str = Header(...)
 ) -> JSONResponse:
     """Tries to register a device"""
-    if not db_is_token_valid(x_client_token):
+    is_client_test = compare_digest(x_client_token, CLIENT_TEST_TOKEN)
+    is_valid_token = is_client_test or db_is_token_valid(x_client_token)
+    if not is_valid_token:
         return JSONResponse({"error": "Invalid token"}, status_code=401)
     assert settings  # can be used to filter by device type. Right now it's a no-op.
     out = {
