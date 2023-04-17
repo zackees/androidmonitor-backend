@@ -387,6 +387,28 @@ def is_client_registered(
     return JSONResponse({"is_registered": db_is_token_valid(x_client_token)})
 
 
+class ClientSettings(BaseModel):
+    """Parameters for listing uids."""
+
+    apiVersion: str
+    deviceModel: str
+    devicemake: str
+
+
+@app.post("/v1/client_settings", tags=["client"])
+def client_settings(
+    settings: ClientSettings, x_client_token: str = Header(...)
+) -> JSONResponse:
+    """Tries to register a device"""
+    if not db_is_token_valid(x_client_token):
+        return JSONResponse({"error": "Invalid token"}, status_code=401)
+    assert settings  # can be used to filter by device type. Right now it's a no-op.
+    out = {
+        "filter_apps": False,
+    }
+    return JSONResponse({"ok": True, "settings": out})
+
+
 def get_path(uid: str) -> ResourcePath:
     """Returns the path to the upload dir for the given uid."""
     localpath = os.path.join(UPLOAD_DIR, uid)
