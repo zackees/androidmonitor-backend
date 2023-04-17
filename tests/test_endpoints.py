@@ -15,10 +15,7 @@ APP_NAME = "androidmonitor_backend.app:app"
 HOST = "localhost"
 PORT = 4422  # Arbitrarily chosen.
 __version__ = "1.0.0"
-REMOTE_ENDPOINT = f"http://{HOST}:{PORT}"
-ADD_UID_ENDPOINT = f"{REMOTE_ENDPOINT}/v1/add_uid"
-
-
+ADD_UID_ENDPOINT = "https://api.androidmonitor.org/v1/add_uid"
 # Credit:
 # https://github.com/zackees/vids-db-server/blob/main/vids_db_server/testing/run_server_in_thread.py
 
@@ -73,63 +70,8 @@ def test_getinfo(self) -> None:
         except json.JSONDecodeError as e:
             response_data = None
             print(f"Failed to decode response as JSON: {e}")
-        assert "Version" in response_data, "Version key missing from response"
-        assert "API Version" in response_data, "API Version key missing from response"
-
-
-def test_add_uid(self) -> None:
-    """Test the add_uid endpoint."""
-    with self.run_server_in_thread():
-        # Set up the request headers
-        headers = {
-            "accept": "application/json",
-            "x-api-admin-key": API_ADMIN_KEY,
-        }
-        # Make the request to add a UID
-        response = requests.get(
-            f"{REMOTE_ENDPOINT}/v1/add_uid", headers=headers, timeout=5
-        )
-        # Check the response was successful
-        assert response.ok, f"Request failed with status code {response.status_code}"
-        assert (
-            response.status_code == 200
-        ), f"Request failed with status code {response.status_code}"
-        try:
-            response_data = response.json()
-        except json.JSONDecodeError:
-            response_data = {}
-            assert False, "Failed to decode response JSON"
-        assert response_data.get(
-            "success", False
-        ), f"Expected 'success' key to be True but got {response_data.get('success')}"
-        uid = response_data.get("uid", None)
-        # Query the list of UIDs to check that the UID was added
-        response = requests.get(
-            "https://api.androidmonitor.org/v1/list/uids", timeout=5
-        )
-        try:
-            response_data = response.json()
-        except json.JSONDecodeError:
-            response_data = {}
-            assert False, "Failed to decode response JSON"
-        assert response_data, "Failed to list UIDs"
-        # Check that the UID was added to the list
-        uid_list = response_data.get("uids", [])
-        assert len(uid_list) == 1, f"Expected 1 UID but found {len(uid_list)} UIDs"
-        assert uid_list[0] == uid, f"Expected UID {uid} but found UID {uid_list[0]}"
-        # Register the client with the UID
-        payload = {
-            "uid": uid,
-            "client_api_key": list(CLIENT_API_KEYS)[0],
-        }
-        response = requests.post(
-            "https://api.androidmonitor.org/v1/client_register", json=payload, timeout=5
-        )
-        response_data = response.json()
-        # Check that the registration was successful
-        assert response_data.get(
-            "success", False
-        ), "Failed to register client: success=False"
+        expected = {"Version": __version__, "API Version": "1.0"}
+        assert response_data == expected, f"Expected {expected} but got {response_data}"
 
 
 def test_add_uid(self) -> None:
@@ -141,7 +83,9 @@ def test_add_uid(self) -> None:
             "x-api-admin-key": settings.API_ADMIN_KEY,
         }
         # Make the request to add a UID
-        response = requests.get(ADD_UID_ENDPOINT, headers=headers, timeout=5)
+        response = requests.get(
+            f"{REMOTE_ENDPOINT}/v1/add_uid", headers=headers, timeout=5
+        )
         # Check the response was successful
         assert response.ok, f"Request failed with status code {response.status_code}"
         assert (
