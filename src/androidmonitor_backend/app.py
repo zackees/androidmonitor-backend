@@ -390,9 +390,10 @@ def is_client_registered(
 class ClientSettings(BaseModel):
     """Parameters for listing uids."""
 
-    apiVersion: str
+    appVersion: str
+    deviceApiVersion: str
     deviceModel: str
-    devicemake: str
+    deviceMake: str
 
 
 @app.post("/v1/client_settings", tags=["client"])
