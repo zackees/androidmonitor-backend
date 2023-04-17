@@ -541,7 +541,7 @@ class UploadFilter(BaseModel):
     start: datetime = Body(None)
     end: datetime = Body(None)
     appname: str = Body(None)
-    count: int = Body(None)
+    count: int = Body(100)
 
 
 @app.post("/v1/list/uploads", tags=["operator"])
