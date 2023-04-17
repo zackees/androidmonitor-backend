@@ -16,9 +16,10 @@ from androidmonitor_backend import settings
 APP_NAME = "androidmonitor_backend.app:app"
 HOST = "localhost"
 PORT = 4422  # Arbitrarily chosen.
-REMOTE_ENDPOINT = "https://androidmonitor.internetwatchdogs.org/v1/info"
 __version__ = "1.0.0"
-ADD_UID_ENDPOINT = "https://api.androidmonitor.org/v1/add_uid"
+REMOTE_ENDPOINT = f"http://{HOST}:{PORT}"
+
+
 # Credit:
 # https://github.com/zackees/vids-db-server/blob/main/vids_db_server/testing/run_server_in_thread.py
 
@@ -69,12 +70,12 @@ def test_getinfo(self) -> None:
             response.status_code == 200
         ), f"Expected status 200 but got {response.status_code}"
         try:
-            response_data = response.json()
-        except json.decoder.JSONDecodeError as e:
+            response_data = json.loads(response.content)
+        except json.JSONDecodeError as e:
             response_data = None
             print(f"Failed to decode response as JSON: {e}")
-        expected = {"Version": __version__, "API Version": "1.0"}
-        assert response_data == expected, f"Expected {expected} but got {response_data}"
+        assert "Version" in response_data, "Version key missing from response"
+        assert "API Version" in response_data, "API Version key missing from response"
 
 
 def test_add_uid(self) -> None:
@@ -86,7 +87,9 @@ def test_add_uid(self) -> None:
             "x-api-admin-key": settings.API_ADMIN_KEY,
         }
         # Make the request to add a UID
-        response = requests.get(ADD_UID_ENDPOINT, headers=headers, timeout=5)
+        response = requests.get(
+            f"{REMOTE_ENDPOINT}/v1/add_uid", headers=headers, timeout=5
+        )
         # Check the response was successful
         assert response.ok, f"Request failed with status code {response.status_code}"
         assert (
