@@ -581,6 +581,8 @@ def list_uid_uploads(
         return JSONResponse({"error": "Invalid API key"}, status_code=401)
     if upload_filter.uid is not None:
         upload_filter.uid = upload_filter.uid.replace("-", "")
+    if upload_filter.appname == "*":
+        upload_filter.appname = None
     rows = db_get_uploads(
         upload_filter.uid,
         upload_filter.start,
