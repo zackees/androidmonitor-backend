@@ -67,21 +67,21 @@ async function list_uploads(api_key) {
 (async () => {
     try {
         const loggedInData = await is_logged_in(OPERATOR_KEY);
-        console.log(loggedInData);
+        console.log("Logged In:", loggedInData);
     } catch (err) {
         console.log(err);
     }
 
     try {
         const listUsersData = await list_users(OPERATOR_KEY);
-        console.log(listUsersData);
+        console.log("List users:", listUsersData);
     } catch (err) {
         console.log(err);
     }
 
     try {
         const listUploadsData = await list_uploads(OPERATOR_KEY);
-        console.log(listUploadsData);
+        console.log("List Uploads:", listUploadsData);
     } catch (err) {
         console.log(err);
     }
