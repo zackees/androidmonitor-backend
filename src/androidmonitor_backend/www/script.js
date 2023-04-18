@@ -1,4 +1,5 @@
-const HOSTURL = window.location.protocol + '//' + window.location.host;
+const HOSTURL =
+  window.location.protocol + '//' + window.location.host;
 const xApiKey = 'test';
 
 /**
@@ -149,10 +150,20 @@ $(document).ready(async function () {
   listUsers.click(async (e) => {
     listUsers.prop('disabled', true);
     listUsers.text('Searching...');
-    const options = {
-      start: getDatetime(userStartDate.val(), userStartTime.val(), yesterday),
-      end: getDatetime(userEndDate.val(), userEndTime.val()),
-    };
+
+    const start = getDatetime(userStartDate.val(), userStartTime.val(), yesterday),
+    const end = getDatetime(userEndDate.val(), userEndTime.val()),
+
+    const options = {};
+
+    if (start !== false) {
+      options.start = start
+    }
+
+    if (end !== false) {
+      options.end = end
+    }
+
     const users = await post(endpoints.listUids, options);
     listUsers.prop('disabled', false);
     listUsers.text('Search');
@@ -160,7 +171,10 @@ $(document).ready(async function () {
     userResults.hide();
     let html = '';
     for (const user of users) {
-      html += `<tr></tr>`;
+      html += `<tr>
+        <td>${user.uid}</td>
+        <td>${user.created}</td>
+      </tr>`;
     }
 
     userResults.find('tbody').html(html);
@@ -227,15 +241,24 @@ $(document).ready(async function () {
     listUploads.prop('disabled', true);
     listUploads.text('Searching...');
 
+    const start = getDatetime(
+      uploadsStartDate.val(),
+      uploadsStartTime.val(),
+      yesterday
+    );
+    const end = getDatetime(uploadsEndDate.val(), uploadsEndTime.val());
+
     const options = {
-      start: getDatetime(
-        uploadsStartDate.val(),
-        uploadsStartTime.val(),
-        yesterday
-      ),
-      end: getDatetime(uploadsEndDate.val(), uploadsEndTime.val()),
       count: uploadsCount.val(),
     };
+
+    if (start !== false) {
+      options.start = start;
+    }
+
+    if (end !== false) {
+      options.end = end;
+    }
 
     if (uploadsUid.val() !== '') {
       options.uid = uploadsUid.val();
@@ -271,7 +294,8 @@ $(document).ready(async function () {
  */
 function getDatetime(date, time, now = new Date()) {
   if (date === undefined || date === false || date === '') {
-    date = `${now.getMonth()}/${now.getDate()}/${now.getFullYear()}`;
+    return false;
+    // date = `${now.getMonth()}/${now.getDate()}/${now.getFullYear()}`;
   }
 
   if (time === undefined || time === false || time === '') {

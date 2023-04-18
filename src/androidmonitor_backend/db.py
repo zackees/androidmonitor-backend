@@ -174,21 +174,6 @@ def db_register_upload(
         session.commit()
 
 
-def db_list_uploads(uid: str, limit: int = 10) -> Sequence[Row[Any]]:
-    """List the uploads."""
-    db_init_once()
-    with Session() as session:
-        select = (
-            vid_table.select()
-            .where(vid_table.c.user_uid == uid)
-            .order_by(vid_table.c.created.desc())
-            .limit(limit)
-        )
-        print(str(select))
-        result = session.execute(select)
-        return result.fetchall()
-
-
 def db_uid_exists(uid: str) -> bool:
     """Check if a uid exists."""
     db_init_once()
@@ -442,7 +427,6 @@ def db_get_uploads(
         select = select.order_by(vid_table.c.start.desc())
         if count is not None:
             select = select.limit(count)
-        select_str = str(select)
         result = session.execute(select)
         rows = result.fetchall()
         return rows
