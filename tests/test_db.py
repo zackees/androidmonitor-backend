@@ -23,15 +23,14 @@ from androidmonitor_backend.db import (
     db_expire_old_uids,
     db_get_log,
     db_get_recent,
+    db_get_uploads,
     db_get_user_from_token,
     db_insert_uid,
     db_is_client_registered,
     db_list_logs,
-    db_list_uploads,
     db_register_upload,
     db_to_string,
     db_try_register,
-    db_get_uploads,
 )
 
 
@@ -93,14 +92,12 @@ class DbTester(unittest.TestCase):
             uri_meta="/tmp/meta.json",
         )
         db_str = db_to_string()
-        vids = db_list_uploads("0000")
+        vids = db_get_uploads("0000")
         self.assertEqual(len(vids), 1, f"Expected 1 video, got {len(vids)}, {db_str}")
         vid = vids[0]
         self.assertEqual(vid.user_uid, "0000")
         self.assertEqual(vid.uri_video, "/tmp/vid.mp4")
         self.assertEqual(vid.uri_meta, "/tmp/meta.json")
-        vids = db_get_uploads("*")
-        self.assertEqual(len(vids), 1, f"Expected 1 video, got {len(vids)}, {db_str}")
 
     def test_db_logs(self) -> None:
         """Tests that a log can be added, listed and retrieved."""
