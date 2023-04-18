@@ -564,7 +564,7 @@ def list_uids(
 class UploadFilter(BaseModel):
     """Filter for uploads."""
 
-    uid: str = Body(None)
+    uid: str = Body("*")
     start: datetime = Body(None)
     end: datetime = Body(None)
     appname: str = Body("*")
@@ -579,10 +579,7 @@ def list_uid_uploads(
     """Get's all uploads from the user with the given uid."""
     if not is_operator_authenticated(x_api_admin_key):
         return JSONResponse({"error": "Invalid API key"}, status_code=401)
-    if upload_filter.uid is not None:
-        upload_filter.uid = upload_filter.uid.replace("-", "")
-    if upload_filter.appname == "*":
-        upload_filter.appname = None
+    upload_filter.uid = upload_filter.uid.replace("-", "")
     rows = db_get_uploads(
         upload_filter.uid,
         upload_filter.start,
