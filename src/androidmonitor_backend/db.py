@@ -184,6 +184,7 @@ def db_list_uploads(uid: str, limit: int = 10) -> Sequence[Row[Any]]:
             .order_by(vid_table.c.created.desc())
             .limit(limit)
         )
+        print(str(select))
         result = session.execute(select)
         return result.fetchall()
 
@@ -430,17 +431,18 @@ def db_get_uploads(
     db_init_once()
     with Session() as session:
         select = vid_table.select()
-        if uid is not None:
+        if uid is not None and uid != "*":
             select = select.where(vid_table.c.user_uid == uid)
         if start is not None:
             select = select.where(vid_table.c.start >= start)
         if end is not None:
             select = select.where(vid_table.c.end <= end)
-        if appname is not None:
+        if appname is not None and appname != "*":
             select = select.where(vid_table.c.appname == appname)
         select = select.order_by(vid_table.c.start.desc())
         if count is not None:
             select = select.limit(count)
+        select_str = str(select)
         result = session.execute(select)
         rows = result.fetchall()
         return rows
