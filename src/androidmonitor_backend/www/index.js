@@ -1,6 +1,7 @@
 const HOSTURL = window.location.protocol + "//" + window.location.host;
 const ENDPOINT_LOGGED_IN = HOSTURL + "/v1/logged_in/operator";
 const ENDPOINT_LIST_USERS = HOSTURL + "/v1/list/uids";
+const OPERATOR_KEY = "test"
 
 async function is_logged_in(api_key) {
     try {
@@ -65,21 +66,21 @@ async function list_uploads(api_key) {
 
 (async () => {
     try {
-        const loggedInData = await is_logged_in('test');
+        const loggedInData = await is_logged_in(OPERATOR_KEY);
         console.log(loggedInData);
     } catch (err) {
         console.log(err);
     }
 
     try {
-        const listUsersData = await list_users('test');
+        const listUsersData = await list_users(OPERATOR_KEY);
         console.log(listUsersData);
     } catch (err) {
         console.log(err);
     }
 
     try {
-        const listUploadsData = await list_uploads('test');
+        const listUploadsData = await list_uploads(OPERATOR_KEY);
         console.log(listUploadsData);
     } catch (err) {
         console.log(err);
