@@ -2,7 +2,7 @@
 // get the hosturl
 const HOSTURL = window.location.protocol + "//" + window.location.host;
 const ENDPOINT_LOGGED_IN = HOSTURL + "/v1/logged_in/operator";
-const ENDPOINT_LIST_USERS = HOSTURL + "/v1/uids";
+const ENDPOINT_LIST_USERS = HOSTURL + "/v1/list/uids";
 
 function is_logged_in(api_key, on_success, on_error) {
     fetch(ENDPOINT_LOGGED_IN, {
@@ -18,7 +18,7 @@ function is_logged_in(api_key, on_success, on_error) {
 }
 
 function list_users(api_key, on_success, on_error) {
-    fetch('https://androidmonitor.internetwatchdogs.org/v1/list/uids', {
+    fetch(ENDPOINT_LIST_USERS, {
     method: 'POST',
     headers: {
         'Accept': 'application/json',
