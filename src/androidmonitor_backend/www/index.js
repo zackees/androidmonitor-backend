@@ -1,75 +1,87 @@
-
-// get the hosturl
 const HOSTURL = window.location.protocol + "//" + window.location.host;
 const ENDPOINT_LOGGED_IN = HOSTURL + "/v1/logged_in/operator";
 const ENDPOINT_LIST_USERS = HOSTURL + "/v1/list/uids";
 
-function is_logged_in(api_key, on_success, on_error) {
-    fetch(ENDPOINT_LOGGED_IN, {
-        method: 'GET',
-        headers: {
-            'Accept': 'application/json',
-            'x-api-key': api_key
-        }
-    })
-    .then(response => response.json())
-    .then(data => on_success(data))
-    .catch(error => on_error('Error:', error));
+async function is_logged_in(api_key) {
+    try {
+        const response = await fetch(ENDPOINT_LOGGED_IN, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'x-api-key': api_key
+            }
+        });
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        throw new Error('Error:', error);
+    }
 }
 
-function list_users(api_key, on_success, on_error) {
-    fetch(ENDPOINT_LIST_USERS, {
-        method: 'POST',
-        headers: {
-            'Accept': 'application/json',
-            'x-api-admin-key': api_key,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            "start": "2023-03-18T02:47:14.133Z",
-            "end": "2023-04-18T02:47:14.133Z"
-        })
-    })
-    .then(response => response.json())
-    .then(data => on_success(data))
-    .catch(error => on_error('Error:', error));
+async function list_users(api_key) {
+    try {
+        const response = await fetch(ENDPOINT_LIST_USERS, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'x-api-admin-key': api_key,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                "start": "2023-03-18T02:47:14.133Z",
+                "end": "2023-04-18T02:47:14.133Z"
+            })
+        });
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        throw new Error('Error:', error);
+    }
 }
 
-function list_uploads(api_key, on_success, on_error) {
-    fetch('https://androidmonitor.internetwatchdogs.org/v1/list/uploads', {
-    method: 'POST',
-    headers: {
-        'Accept': 'application/json',
-        'x-api-admin-key': api_key,
-        'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-        "uid": "*",
-        "start": "2023-03-18T02:51:29.612Z",
-        "end": "2023-04-18T02:51:29.612Z",
-        "appname": "*",
-        "count": 100
-    })
-    })
-    .then(response => response.json())
-    .then(data => on_success(data))
-    .catch(error => on_error(error));
+async function list_uploads(api_key) {
+    try {
+        const response = await fetch('https://androidmonitor.internetwatchdogs.org/v1/list/uploads', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'x-api-admin-key': api_key,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                "uid": "*",
+                "start": "2023-03-18T02:51:29.612Z",
+                "end": "2023-04-18T02:51:29.612Z",
+                "appname": "*",
+                "count": 100
+            })
+        });
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        throw error;
+    }
 }
 
-is_logged_in(
-    'test',
-    function(data) { console.log(data); },
-    function(err) { console.log(err); }
-);
+(async () => {
+    try {
+        const loggedInData = await is_logged_in('test');
+        console.log(loggedInData);
+    } catch (err) {
+        console.log(err);
+    }
 
-list_users(
-    'test',
-    function(data) { console.log(data); },
-    function(err) { console.log(err); }
-)
+    try {
+        const listUsersData = await list_users('test');
+        console.log(listUsersData);
+    } catch (err) {
+        console.log(err);
+    }
 
-list_uploads(
-    'test',
-    function(data) { console.log(data); },
-    function(err) { console.log(err); }
-)
+    try {
+        const listUploadsData = await list_uploads('test');
+        console.log(listUploadsData);
+    } catch (err) {
+        console.log(err);
+    }
+})();
