@@ -2,6 +2,7 @@
 Tests the endpoints of the API.
 """
 import contextlib
+import json
 import threading
 import time
 import unittest
@@ -83,6 +84,22 @@ class EndpointTester(unittest.TestCase):
             self.assertIn("Version:", content)
             self.assertIn("Started at:", content)
 
+    def test_list_uids(self) -> None:
+        """Test the list_uids endpoint."""
+        with run_server_in_thread():
+            headers = {
+                "Accept": "application/json",
+                "x-api-admin-key": API_ADMIN_KEY,
+                "Content-Type": "application/json",
+            }
+            payload = json.dumps(
+                {"start": "2023-03-18T02:47:14.133Z", "end": "2023-04-18T02:47:14.133Z"}
+            )
+            response = requests.post(
+                ENDPOINT_LIST_UIDS, headers=headers, data=payload, timeout=5
+            )
+            response.raise_for_status()
+
     @unittest.skip("Still work in progress")
     def test_add_uid(self) -> None:
         """Test the add_uid endpoint."""
@@ -101,7 +118,8 @@ class EndpointTester(unittest.TestCase):
             self.assertIsNotNone(uid, "Expected UID to be returned")
             # Query the list of UIDs to check that the UID was added
             payload = {
-                "start": "2023-03-18T02:47:14.133Z", "end": "2023-04-18T02:47:14.133Z"
+                "start": "2023-03-18T02:47:14.133Z",
+                "end": "2023-04-18T02:47:14.133Z",
             }
             response = requests.get(
                 ENDPOINT_LIST_UIDS, headers=headers, data=payload, timeout=5
