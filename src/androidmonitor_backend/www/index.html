@@ -1,12 +1,141 @@
-<html>
-<head></head>
-<body>
-<h1>WWW stuff</h1>
-<p>www stuff goes here</p>
-</body>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>My Webpage</title>
+    <meta name="description" content="This is a description of my webpage." />
+    <meta name="author" content="Your Name Here" />
+    <meta name="keywords" content="webpage, example, HTML5, SEO" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-ui-timepicker-addon/1.6.3/jquery-ui-timepicker-addon.min.js"></script>
+    <script src="script.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css"
+      integrity="sha384-X38yfunGUhNzHpBaEBsWLO+A0HDYOQi8ufWDkZ0k9e0eXz/tH3II7uKZ9msv++Ls"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="stylesheet"
+      href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/jquery-ui-timepicker-addon/1.6.3/jquery-ui-timepicker-addon.min.css"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="pure-g">
+      <div class="pure-u-1 pure-u-md-1-3">
+        <div id="app">
+          <!-- accordion -->
+          <div id="accordion">
+            <h3>List Users</h3>
+            <div>
+              <div>
+                Start Date:
+                <input type="text" id="userStartDate" class="time" />
+                <input type="text" id="userStartTime" class="time" />
+              </div>
+              <br />
+              <div>
+                End Date:
+                <input type="text" id="userEndDate" class="time" />
+                <input type="text" id="userEndTime" class="time" />
+              </div>
+              <br />
+              <button class="button-success pure-button" id="listUsers">
+                Search
+              </button>
+              <table id="userResults">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>URI</th>
+                    <th>Appname</th>
+                    <th>Start</th>
+                    <th>End</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
 
-<script src="index.js">
-</script>
+            <h3>List Uploads</h3>
+            <div>
+              <div>
+                <div>
+                  Count:
+                  <input
+                    type="text"
+                    id="uploadsCount"
+                    class="time"
+                    value="100"
+                  />
+                </div>
+                <br />
+                <div>
+                  UID:
+                  <input type="text" id="uploadsUid" class="time" />
+                </div>
+                <br />
+                <div>
+                  Appname:
+                  <input type="text" id="uploadsAppname" class="time" />
+                </div>
+                <br />
+                <div>
+                  Start Date:
+                  <input type="text" id="uploadsStartDate" class="time" />
+                  <input type="text" id="uploadsStartTime" class="time" />
+                </div>
+                <br />
+                <div>
+                  End Date:
+                  <input type="text" id="uploadsEndDate" class="time" />
+                  <input type="text" id="uploadsEndTime" class="time" />
+                </div>
+                <br />
+                <button class="button-success pure-button" id="listUploads">
+                  Search
+                </button>
+                <table id="uploadResults">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>URI</th>
+                      <th>Appname</th>
+                      <th>Start</th>
+                      <th>End</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
 
+        <!-- video dialog -->
+        <div id="video-dialog"></div>
+        <!-- Login dialog box -->
+        <div id="login-dialog" title="Login">
+          <form>
+            <input
+              placeholder="Password"
+              type="password"
+              id="password"
+              name="password"
+              autocomplete="on"
+            /><br /><br />
 
+            <input type="submit" value="Log in" />
+          </form>
+        </div>
+      </div>
+    </div>
+  </body>
 </html>
