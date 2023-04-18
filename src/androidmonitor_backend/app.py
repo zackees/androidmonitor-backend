@@ -567,7 +567,7 @@ class UploadFilter(BaseModel):
     uid: str = Body(None)
     start: datetime = Body(None)
     end: datetime = Body(None)
-    appname: str = Body(None)
+    appname: str = Body("*")
     count: int = Body(100)
 
 
