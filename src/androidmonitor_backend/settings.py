@@ -63,5 +63,15 @@ AWS_BUCKET_NAME = "androidmonitor-media-vault"
 S3_UPLOAD_DIR = "s3://upload"
 USE_S3_STORAGE = os.environ.get("USE_S3_PATH", "0" if not IS_PRODUCTION else "1") == "1"
 
+TRACKING_APPS = [
+    "com.google.android.youtube",
+    "com.facebook.katana",
+    "com.zhiliaoapp.musically",  # TikTok
+    "com.twitter.android",  # Twitter
+    "com.instagram.android",  # Instagram
+    # "com.snapchat.android",  # Snapchat
+    "com.android.chrome",  # Chrome
+]
+
 os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(LOG_DIR, exist_ok=True)

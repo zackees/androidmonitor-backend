@@ -60,6 +60,7 @@ from androidmonitor_backend.settings import (
     HAS_URL,
     IS_TEST,
     S3_UPLOAD_DIR,
+    TRACKING_APPS,
     UPLOAD_DIR,
     URL,
     USE_S3_STORAGE,
@@ -407,7 +408,8 @@ def client_settings(
         return JSONResponse({"error": "Invalid token"}, status_code=401)
     assert settings  # can be used to filter by device type. Right now it's a no-op.
     out = {
-        "filter_apps": False,
+        "filter_apps": True,
+        "filter_apps_list": TRACKING_APPS,
     }
     return JSONResponse(out)
 
