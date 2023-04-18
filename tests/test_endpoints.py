@@ -136,7 +136,6 @@ class EndpointTester(unittest.TestCase):
                 ENDPOINT_IS_CLIENT_REGISTERED, headers=headers, timeout=5
             )
 
-    @unittest.skip("Work in progress")
     def test_add_uid(self) -> None:
         """Test the add_uid endpoint."""
         with run_server_in_thread():
@@ -150,9 +149,8 @@ class EndpointTester(unittest.TestCase):
             response.raise_for_status()
             response_data = response.json()
             self.assertTrue(response_data.get("ok"))
-            uid = response_data.get("uid", "").replace("-", "")
+            uid = response_data.get("uid", "")
             self.assertTrue(uid, "Expected UID to be returned")
-            # Register the UID with the server
             headers = {
                 "x-uid": uid,
                 "x-client-api-key": list(CLIENT_API_KEYS)[0],
@@ -166,7 +164,58 @@ class EndpointTester(unittest.TestCase):
             self.assertIsNone(response_data.get("error"))
             token = response_data.get("token")
             self.assertTrue(token, "Expected token to be returned")
+            # Register the UID with the server
+            headers = {
+                "accept": "application/json",
+                "x-api-admin-key": API_ADMIN_KEY,
+            }
+            # Query the list of UIDs to check that the UID was added
+            payload = json.dumps({})
+            response = requests.post(
+                ENDPOINT_LIST_UIDS, headers=headers, data=payload, timeout=5
+            )
+            response.raise_for_status()
+            response_data = response.json()
+            self.assertTrue(response_data, "Failed to list UIDs")
+            # Check that the UID was added to the list
+            uids = [uid_data["uid"] for uid_data in response_data]
+            uid = uid.replace("-", "")
+            self.assertIn(uid, uids, f"UID {uid} not found in list of UIDs")
 
+    @unittest.skip("Work in progress")
+    def test_add_uid_time_range(self) -> None:
+        """Test the add_uid endpoint."""
+        with run_server_in_thread():
+            # Set up the request headers
+            headers = {
+                "accept": "application/json",
+                "x-api-admin-key": API_ADMIN_KEY,
+            }
+            # Make the request to add a UID
+            response = requests.get(ENDPOINT_ADD_UID, headers=headers, timeout=5)
+            response.raise_for_status()
+            response_data = response.json()
+            self.assertTrue(response_data.get("ok"))
+            uid = response_data.get("uid", "")
+            self.assertTrue(uid, "Expected UID to be returned")
+            headers = {
+                "x-uid": uid,
+                "x-client-api-key": list(CLIENT_API_KEYS)[0],
+            }
+            response = requests.post(
+                ENDPOINT_CLIENT_REGISTER, headers=headers, timeout=5
+            )
+            response.raise_for_status()
+            response_data = response.json()
+            self.assertTrue(response_data.get("ok"))
+            self.assertIsNone(response_data.get("error"))
+            token = response_data.get("token")
+            self.assertTrue(token, "Expected token to be returned")
+            # Register the UID with the server
+            headers = {
+                "accept": "application/json",
+                "x-api-admin-key": API_ADMIN_KEY,
+            }
             # Query the list of UIDs to check that the UID was added
             payload = json.dumps(
                 {"start": "2023-03-18T02:47:14.133Z", "end": datetime.now().isoformat()}
@@ -179,26 +228,8 @@ class EndpointTester(unittest.TestCase):
             self.assertTrue(response_data, "Failed to list UIDs")
             # Check that the UID was added to the list
             uids = [uid_data["uid"] for uid_data in response_data]
-            self.assertIn(
-                uid.replace("-", ""), uids, f"UID {uid} not found in list of UIDs"
-            )
-            # self.assertEqual(
-            #     1, len(uid_list), f"Expected 1 UID but found {len(uid_list)} UIDs"
-            # )
-            # self.assertEqual(
-            #     uid, uid_list[0], f"Expected UID {uid} but found UID {uid_list[0]}"
-            # )
-            # # Register the client with the UID
-            # payload = {
-            #     "uid": uid,
-            #     "client_api_key": list(CLIENT_API_KEYS)[0],
-            # }
-            # response = requests.post(ENDPOINT_CLIENT_REGISTER, json=payload, timeout=5)
-            # response_data = response.json()
-            # # Check that the registration was successful
-            # self.assertTrue(
-            #     response_data.get("success", False), "Expected 'success' key to be True"
-            # )
+            uid = uid.replace("-", "")
+            self.assertIn(uid, uids, f"UID {uid} not found in list of UIDs")
 
 
 if __name__ == "__main__":
