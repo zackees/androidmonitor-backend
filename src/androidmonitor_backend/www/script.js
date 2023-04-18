@@ -151,8 +151,8 @@ $(document).ready(async function () {
     listUsers.prop('disabled', true);
     listUsers.text('Searching...');
 
-    const start = getDatetime(userStartDate.val(), userStartTime.val(), yesterday),
-    const end = getDatetime(userEndDate.val(), userEndTime.val()),
+    const start = getDatetime(userStartDate.val(), userStartTime.val(), yesterday);
+    const end = getDatetime(userEndDate.val(), userEndTime.val());
 
     const options = {};
 
