@@ -1,8 +1,12 @@
 """
 Tests the endpoints of the API.
 """
+
+# flake8: noqa: E402
+
 import contextlib
 import json
+import os
 import threading
 import time
 import unittest
@@ -12,7 +16,20 @@ import requests  # type: ignore
 import uvicorn
 from uvicorn.config import Config
 
-from androidmonitor_backend.settings import API_ADMIN_KEY, CLIENT_API_KEYS
+# Change set the DB_URL environment variable to a temporary sqlite database.
+# This needs to be done before importing the app.
+HERE = os.path.dirname(os.path.abspath(__file__))
+HERE_RELATIVE = os.path.relpath(HERE, ".")
+DB_URL = f"sqlite:///{HERE_RELATIVE}/out/test.sqlite3".replace("\\", "/")
+DB_FILE = os.path.abspath(DB_URL.replace("sqlite:///", ""))
+os.makedirs(os.path.dirname(DB_FILE), exist_ok=True)
+os.environ["DB_URL"] = DB_URL
+os.environ["ALLOW_DB_CLEAR"] = "1"
+
+from androidmonitor_backend.settings import (  # pylint: disable=wrong-import-position
+    API_ADMIN_KEY,
+    CLIENT_API_KEYS,
+)
 
 APP_NAME = "androidmonitor_backend.app:app"
 HOST = "localhost"
@@ -94,9 +111,10 @@ class EndpointTester(unittest.TestCase):
                 "x-api-admin-key": API_ADMIN_KEY,
                 "Content-Type": "application/json",
             }
-            payload = json.dumps(
-                {"start": "2023-03-18T02:47:14.133Z", "end": "2023-04-18T02:47:14.133Z"}
-            )
+            # payload = json.dumps(
+            #     {"start": "2023-03-18T02:47:14.133Z", "end": "2023-04-18T02:47:14.133Z"}
+            # )
+            payload = json.dumps({})
             response = requests.post(
                 ENDPOINT_LIST_UIDS, headers=headers, data=payload, timeout=5
             )

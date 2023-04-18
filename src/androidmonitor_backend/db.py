@@ -33,9 +33,9 @@ user_table = Table(
     "user",
     meta,
     Column("uid", String, primary_key=True),
-    Column("created", DateTime, index=True),
+    Column("created", DateTime(timezone=True), index=True),
     Column("token", String, index=True),
-    Column("version", String, default="0.1"),  # beta, pre-release.
+    Column("version", String, default="0.2"),  # beta, pre-release.
 )
 vid_table = Table(
     "videos",
@@ -45,10 +45,10 @@ vid_table = Table(
     Column("user_uid", String),
     Column("uri_video", String),
     Column("appname", String),
-    Column("start", DateTime),
-    Column("end", DateTime),
+    Column("start", DateTime(timezone=True)),
+    Column("end", DateTime(timezone=True)),
     Column("uri_meta", String),
-    Column("created", DateTime, index=True),
+    Column("created", DateTime(timezone=True), index=True),
 )
 logs_table = Table(
     "logs",
@@ -57,7 +57,7 @@ logs_table = Table(
     Column("id", Integer, primary_key=True),
     Column("user_uid", String),
     Column("log", String),
-    Column("created", DateTime, index=True),
+    Column("created", DateTime(timezone=True), index=True),
 )
 
 # Define a relationship between the user and videos tables
